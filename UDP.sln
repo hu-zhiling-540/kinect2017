@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "phib", "phib\phib.mdproj", "{8EBC8C19-1F3D-43D3-93A2-67A090A1318B}"
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "UDP", "phib\UDP.mdproj", "{8EBC8C19-1F3D-43D3-93A2-67A090A1318B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
