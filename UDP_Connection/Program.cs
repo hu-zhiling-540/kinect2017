@@ -4,9 +4,10 @@ using System.Threading;
 
 namespace UDP_Connection    {
     class Program   {
+        
         //ip address  
         static string ip_address = "127.0.0.1";
-		static int port = 8001;   //port
+		static int port = 8008;   //port
 		
         static void Main(string[] args)     {
 

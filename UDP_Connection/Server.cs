@@ -25,10 +25,9 @@ namespace UDP_Connection.UDP_Receiver  {
            
             mySocket.Bind(myIPEP);
 
-			//Console.WriteLine("Message received from {0}: ", local.ToString());
-			Console.WriteLine("This is a Server, host name is {0}", Dns.GetHostName());
-
-			Console.WriteLine("Waiting for a client");
+            Console.WriteLine("This is a Server, IP address is {0}, " +
+                              "host name is {1}", myIP.ToString(), Dns.GetHostName());
+			Console.WriteLine("Server is waiting for a client");
 		}
 
 
@@ -39,13 +38,15 @@ namespace UDP_Connection.UDP_Receiver  {
 			//thread2.Start();
 
         // Sending information to Client
-		public void sendData(string data)   {
-			//EndPoint point = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
-			while (true)    {
-				//string msg = Console.ReadLine();
-                mySocket.SendTo(Encoding.UTF8.GetBytes(data), myEP);
-			}
-		}
+		//public void sendData()   {
+		//	//EndPoint point = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8001);
+  //          IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
+		//	while (true)    {
+		//		string msg = Console.ReadLine();
+  //              mySocket.SendTo(Encoding.UTF8.GetBytes(msg), sender);
+		//	}
+		//}
+
 
 		// Receive data from Client
         public void receiveData()   {
@@ -55,21 +56,21 @@ namespace UDP_Connection.UDP_Receiver  {
 			//save the ip address and port of Client
 			IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
 			EndPoint remote = (EndPoint)(sender);
+
             int length = mySocket.ReceiveFrom(result, ref remote);
-			Console.WriteLine("Message received from {0}: ", remote.ToString());
-			Console.WriteLine(Encoding.ASCII.GetString(result, 0, length));
+			Console.WriteLine("Message received from {0} .", remote.ToString());
+			Console.WriteLine("Message received: {0} ", Encoding.ASCII.GetString(result, 0, length));
 
-			// when connect succesfully
-			string welcome = "Hello!";
-
-			result = Encoding.ASCII.GetBytes(welcome);
+			result = Encoding.ASCII.GetBytes("Connected.");
             mySocket.SendTo(result, result.Length, SocketFlags.None, remote);
 
 			while (true)    {
                 // refresh
                 result = new byte[1024];
                 length = mySocket.ReceiveFrom(result, ref remote);
-                Console.WriteLine(Encoding.ASCII.GetString(result, 0, length));
+                Console.WriteLine("Message Received: {0}", Encoding.ASCII.GetString(result, 0, length));
+
+                // pass back the message I receive from Client
                 mySocket.SendTo(result, result.Length, SocketFlags.None, remote);
 			}
 		}
