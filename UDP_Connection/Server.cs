@@ -6,17 +6,18 @@ using System.Text;
 
 
 namespace UDP_Connection.UDP_Receiver  {
+    
 	class Program   {
 
-
+        // instances
 		IPAddress myIP = null;      // the IP address
 		IPEndPoint myIPEP = null;
 		EndPoint myEP = null;
 		Socket mySocket = null;
 
 		//Obtain the IP address, and port number of the endpoin
-		public Program(String ip_address, int port)
-		{
+		public Program(String ip_address, int port)     {
+            
 			myIP = IPAddress.Parse(ip_address);
 			myIPEP = new IPEndPoint(myIP, port);
 			myEP = (EndPoint)myIPEP;
@@ -24,7 +25,7 @@ namespace UDP_Connection.UDP_Receiver  {
            
             mySocket.Bind(myIPEP);
 
-			Console.WriteLine("Message received from {0}: ", local.ToString());
+			//Console.WriteLine("Message received from {0}: ", local.ToString());
 			Console.WriteLine("This is a Server, host name is {0}", Dns.GetHostName());
 
 			Console.WriteLine("Waiting for a client");
@@ -47,9 +48,10 @@ namespace UDP_Connection.UDP_Receiver  {
 		}
 
 		// Receive data from Client
-        public void receiveData()
-		{
+        public void receiveData()   {
+            
             byte[] result = new byte[1024];
+
 			//save the ip address and port of Client
 			IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
 			EndPoint remote = (EndPoint)(sender);
@@ -63,8 +65,7 @@ namespace UDP_Connection.UDP_Receiver  {
 			result = Encoding.ASCII.GetBytes(welcome);
             mySocket.SendTo(result, result.Length, SocketFlags.None, remote);
 
-			while (true)
-			{
+			while (true)    {
                 // refresh
                 result = new byte[1024];
                 length = mySocket.ReceiveFrom(result, ref remote);

@@ -45,8 +45,8 @@ namespace UDP_Connection.UDP_Sender
             data = Encoding.ASCII.GetBytes(welcome);
             mySocket.SendTo(data, data.Length, SocketFlags.None, myIPEP);
 
-            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-            EndPoint remote = (EndPoint)sender;
+            IPEndPoint receiver = new IPEndPoint(IPAddress.Any, 0);
+            EndPoint remote = (EndPoint)receiver;
 
             data = new byte[1024];
 
