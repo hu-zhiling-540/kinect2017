@@ -5,32 +5,32 @@ using System.Net.Sockets;
 using System.Threading;
 
 
-namespace UDP_Connection.UDP_Sender
-{
-    class Program   {
+namespace UDP_Connection    {
+    
+    class UDP_Sender   {
         
         IPAddress myIP = null;      // the IP address
         IPEndPoint myIPEP = null;
         EndPoint myEP = null;          
         Socket mySocket = null;
 
-		//Obtain the IP address, and port number of the endpoin
-		public Program(string ip_address, int port)   {
+        //Obtain the IP address, and port number of the endpoin
+        public UDP_Sender(string ip_address, int port)  {
             myIP = IPAddress.Parse(ip_address);
             myIPEP = new IPEndPoint(myIP, port);
             myEP = (EndPoint)myIPEP;
             mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-			
-   //         Thread thread = new Thread(sendData);
-			//thread.Start();
-			//Thread thread2 = new Thread(Receiver);
-			//thread2.Start();
-		}
 
-  
+            //         Thread thread = new Thread(sendData);
+            //thread.Start();
+            //Thread thread2 = new Thread(Receiver);
+            //thread2.Start();
+        }
+
+
 
         // Sending information to Server
-		public void sendData()  {
+        public void sendData()  {
 
 			IPEndPoint receiver = new IPEndPoint(IPAddress.Any, 0);
 			EndPoint remote = (EndPoint)receiver;
