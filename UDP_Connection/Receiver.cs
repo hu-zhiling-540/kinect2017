@@ -5,29 +5,33 @@ using System.Threading;
 using System.Text;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace UDP_Connection  {
 
 	class UDP_Receiver   {
 
 		// instances
-		IPAddress myIP = null;      // the IP address
 		IPEndPoint myIPEP = null;
 		EndPoint myEP = null;
 		Socket mySocket = null;
 
         ConcurrentQueue<string> recievedPackets = new ConcurrentQueue<string>();
+        private int myPort;
 
 
-		//Obtain the IP address, and port number of the endpoin
-        public UDP_Receiver(int port)     {
+		///<summary>
+		///Obtain the port number of the endpoin
+		/// </summary>
+		public UDP_Receiver(int port)     {
 
-			//look at making the receiver receive any UDP msg send to 
-			// this port regardless of IP address 
+            //look at making the receiver receive any UDP msg send to 
+            // this port regardless of IP address 
 
-			// Creates an IPEndPoint to record the IP Address and port number of the sender. 
-			// allows you to read datagrams sent from any source.
-			// the IPAddress.Any address to use any network interface on the system
+            // Creates an IPEndPoint to record the IP Address and port number of the sender. 
+            // allows you to read datagrams sent from any source.
+            // the IPAddress.Any address to use any network interface on the system
+            myPort = port;
 			myIPEP = new IPEndPoint(IPAddress.Any, port);       
 			myEP = (EndPoint)myIPEP;
             // specify the Dgram SocketType, Udp ProtocolType
@@ -37,15 +41,13 @@ namespace UDP_Connection  {
 			// binds it to a set IPEndPoint object so it can wait for incoming packets
             mySocket.Bind(myIPEP);      // will accept any incoming UDP packet on port
 
-
-			//TOOD: remove this in the future
-			Console.WriteLine("This is a Receiver, IP address is {0}, " +
-                              "host name is {1}", myIP.ToString(), Dns.GetHostName());
-			Console.WriteLine("Receiver is waiting for a message");
 		}
 
         public void start() {
-            ThreadStart testThread1Start = new ThreadStart(this.receiveData);
+            //ThreadStart receiverStart = new ThreadStart(this.receiveBroadcast);
+            //Thread receiverThread = new Thread(receiverStart);
+			Thread newThread =new Thread(new ThreadStart(this.receiveBroadcast));
+			newThread.Start();
 		}
 
         public void stop() {
@@ -57,9 +59,10 @@ namespace UDP_Connection  {
         }
 
 		// Receive data from Client
-		public void receiveData()   {
-            
+		public void receiveBroadcast()   {
+
 			// not specify the ip address of the devices sending me the packets
+			// dummy end-point
 			IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
 			EndPoint remote = (EndPoint)(sender);
 
@@ -71,10 +74,9 @@ namespace UDP_Connection  {
                 string decodedMsg = Encoding.ASCII.GetString(result, 0, msgLength);
 				//TOOD: remove this in the future
 				Console.WriteLine("Message Received: {0}",decodedMsg);
-                //messageProcessor(decodedMsg);
 
                 if (decodedMsg == "exit" || decodedMsg == "quit")
-                    break;
+                    stop();
 
 			}
 		}

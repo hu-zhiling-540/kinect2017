@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Threading;
-using UDP_Connection;
 
 namespace UDP_Connection    {
     class Program   {
@@ -12,46 +11,34 @@ namespace UDP_Connection    {
 		static int port = 8008;   //port
 
 
-        bool running = true;
+        //bool running = true;
 
-        public static void echoMessage(string msg) {
-            Console.WriteLine("Echo " + msg);
-        }
+        //public static void echoMessage(string msg) {
+        //    Console.WriteLine("Echo " + msg);
+        //}
 
 
-        public void receiverThread() {
+   //     public void receiverThread() {
 			
-			ConcurrentQueue<string> q = receiver.getMsg();
-            while(running){
+			//ConcurrentQueue<string> q = receiver.getMsg();
+        //    while(running){
                 
-                Console.WriteLine("Echo "  + q.
-            }
+        //        Console.WriteLine("Echo "  + q.
+        //    }
             
-        }
+        //}
 
         static void Main(string[] args)     {
 
 
-            UDP_Receiver receiver = new UDP_Receiver(ip_address, port, echoMessage);
+            UDP_Receiver receiver = new UDP_Receiver(port);
+            UDP_Sender sender = new UDP_Sender(ip_address, port);
             receiver.start();
-
-            ThreadStart testThread2Start = new ThreadStart(new UDP_Sender.Program(ip_address, port).sendData);
-
-			Thread[] testThread = new Thread[2];
-
-			testThread[1] = new Thread(testThread2Start);
-
-			foreach (Thread myThread in testThread)     {
-				myThread.Start();
-			}
+            sender.start();
 
 		}
     }
 
-    // callback, sending message
-
-
-    //public void 
 
 	// a value type that is typically used to 
     // encapsulate small groups of related variables

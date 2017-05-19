@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Client.cs" />
-    <None Include="Server.cs" />
+    <None Include="Sender.cs" />
+    <None Include="Receiver.cs" />
   </ItemGroup>
 </Project>
