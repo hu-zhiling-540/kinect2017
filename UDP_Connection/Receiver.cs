@@ -42,24 +42,37 @@ namespace UDP_Connection
             mySocket.ReceiveTimeout = 500;
         }
 
+        /// <summary>
+        /// Starts the thread for Receiver.
+        /// </summary>
         public void start()
         {
             Thread newThread = new Thread(new ThreadStart(this.onReceive));
             newThread.Start();
         }
 
+        /// <summary>
+        /// Stops the thread for Receiver
+        /// </summary>
         public void stop()
         {
             isRunning = false;
-            mySocket.Dispose();
+            mySocket.Dispose();     //finished using the Socket
         }
 
+        /// <summary>
+        /// Gets the message queue.
+        /// </summary>
+        /// <returns>The message queue.</returns>
         public BlockingCollection<string> getMsgQueue()
         {
             return receivedMsgs;
         }
 
-        // Receive data from Client
+        /// <summary>
+        /// When the Receiver is on, keep accepting message 
+        /// and store them in the queue 
+        /// </summary>
         public void onReceive()
         {
             // not specify the ip address of the devices sending me the packets

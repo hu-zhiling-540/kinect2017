@@ -11,18 +11,24 @@ namespace UDP_Connection
 
         static string ip_address = "127.0.0.1";
         static int port = 8008;
-        public static UDP_Receiver receiver = new UDP_Receiver(port);
-        public static UDP_Sender sender = new UDP_Sender(ip_address, port);
+
+        static UDP_Receiver receiver = new UDP_Receiver(port);
+        static UDP_Sender sender = new UDP_Sender(ip_address, port);
 
         static public bool isRunning = true;
 
-		
+        /// <summary>
+        /// Starts the receiver thread.
+        /// </summary>
         public static void startReceiverThread()
         {
             Thread newThread = new Thread(ReceiverThread);
 			newThread.Start();
         }
 
+        /// <summary>
+        /// Takes out message if any on the queue.
+        /// </summary>
 		public static void ReceiverThread()
 		{
 			string msg;
@@ -39,6 +45,7 @@ namespace UDP_Connection
 			}
 		}
 
+
         static void Main(string[] args)
         {
             receiver.start();
@@ -53,7 +60,6 @@ namespace UDP_Connection
                 Console.WriteLine("Message Sent: {0}", msg);
             }
             Console.WriteLine("Stopping Client.");
-       
 
             receiver.stop();
             isRunning = false;
