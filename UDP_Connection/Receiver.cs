@@ -7,78 +7,82 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace UDP_Connection  {
+namespace UDP_Connection
+{
 
-	class UDP_Receiver   {
+    class UDP_Receiver
+    {
 
-		// instances
-		IPEndPoint myIPEP = null;
-		EndPoint myEP = null;
-		Socket mySocket = null;
-
-        ConcurrentQueue<string> recievedPackets = new ConcurrentQueue<string>();
+        // instances
+        private IPEndPoint myIPEP = null;
+        private EndPoint myEP = null;
+        private Socket mySocket = null;
         private int myPort;
 
+        bool isRunning = true;
 
-		///<summary>
-		///Obtain the port number of the endpoin
+        BlockingCollection<string> receivedMsgs = new BlockingCollection<string>(new ConcurrentQueue<string>());
+
+		/// <summary>
+		/// Obtains the port number of the endpoin.
+		/// The receiver will receiver message regardless of IP address.
 		/// </summary>
-		public UDP_Receiver(int port)     {
-
-            //look at making the receiver receive any UDP msg send to 
-            // this port regardless of IP address 
-
-            // Creates an IPEndPoint to record the IP Address and port number of the sender. 
-            // allows you to read datagrams sent from any source.
+		/// <param name="port">Port.</param>
+		public UDP_Receiver(int port)
+        {
             // the IPAddress.Any address to use any network interface on the system
             myPort = port;
-			myIPEP = new IPEndPoint(IPAddress.Any, port);       
-			myEP = (EndPoint)myIPEP;
+			myIPEP = new IPEndPoint(IPAddress.Any, port);
+            myEP = (EndPoint)myIPEP;
             // specify the Dgram SocketType, Udp ProtocolType
-			mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
-			// if doesn't need to receive UDP data on a specific UDP port, don't have to bind the socket to a specific IPEndPoint
-			// binds it to a set IPEndPoint object so it can wait for incoming packets
+            // to receive UDP data on a specific UDP port
             mySocket.Bind(myIPEP);      // will accept any incoming UDP packet on port
-
-		}
-
-        public void start() {
-            //ThreadStart receiverStart = new ThreadStart(this.receiveBroadcast);
-            //Thread receiverThread = new Thread(receiverStart);
-			Thread newThread =new Thread(new ThreadStart(this.receiveBroadcast));
-			newThread.Start();
-		}
-
-        public void stop() {
-            mySocket.Shutdown(SocketShutdown.Both);   
+            mySocket.ReceiveTimeout = 500;
         }
 
-        public ConcurrentQueue<string> getMsg()  {
-            return recievedPackets;
+        public void start()
+        {
+            Thread newThread = new Thread(new ThreadStart(this.onReceive));
+            newThread.Start();
         }
 
-		// Receive data from Client
-		public void receiveBroadcast()   {
+        public void stop()
+        {
+            isRunning = false;
+            mySocket.Dispose();
+        }
 
-			// not specify the ip address of the devices sending me the packets
-			// dummy end-point
-			IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
-			EndPoint remote = (EndPoint)(sender);
+        public BlockingCollection<string> getMsgQueue()
+        {
+            return receivedMsgs;
+        }
 
-			byte[] result = new byte[1024];
+        // Receive data from Client
+        public void onReceive()
+        {
+            // not specify the ip address of the devices sending me the packets
+            IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);
+            EndPoint remote = (EndPoint)(sender);
+
+            byte[] result = new byte[1024];
             int msgLength;
 
-			while (true)    {
-                msgLength = mySocket.ReceiveFrom(result, ref remote);
-                string decodedMsg = Encoding.ASCII.GetString(result, 0, msgLength);
-				//TOOD: remove this in the future
-				Console.WriteLine("Message Received: {0}",decodedMsg);
+            while (isRunning)
+            {
+                try
+                {
+                    msgLength = mySocket.ReceiveFrom(result, ref remote);
+                    string decodedMsg = Encoding.ASCII.GetString(result, 0, msgLength);
+                    receivedMsgs.Add(decodedMsg);
+                }
+                catch (SocketException s)
+                {
+                   
+                }
+            }
+        }
 
-                if (decodedMsg == "exit" || decodedMsg == "quit")
-                    stop();
-
-			}
-		}
-	}
+    }
 }

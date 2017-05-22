@@ -3,52 +3,68 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Threading;
 
-namespace UDP_Connection    {
-    class Program   {
-        
-        //ip address  
+namespace UDP_Connection
+{
+
+    class Program
+    {
+
         static string ip_address = "127.0.0.1";
-		static int port = 8008;   //port
+        static int port = 8008;
+        public static UDP_Receiver receiver = new UDP_Receiver(port);
+        public static UDP_Sender sender = new UDP_Sender(ip_address, port);
 
+        static public bool isRunning = true;
 
-        //bool running = true;
+		
+        public static void startReceiverThread()
+        {
+            Thread newThread = new Thread(ReceiverThread);
+			newThread.Start();
+        }
 
-        //public static void echoMessage(string msg) {
-        //    Console.WriteLine("Echo " + msg);
-        //}
+		public static void ReceiverThread()
+		{
+			string msg;
+			BlockingCollection<string> msgs;
 
+			msgs = receiver.getMsgQueue();
 
-   //     public void receiverThread() {
-			
-			//ConcurrentQueue<string> q = receiver.getMsg();
-        //    while(running){
-                
-        //        Console.WriteLine("Echo "  + q.
-        //    }
-            
-        //}
-
-        static void Main(string[] args)     {
-
-
-            UDP_Receiver receiver = new UDP_Receiver(port);
-            UDP_Sender sender = new UDP_Sender(ip_address, port);
-            receiver.start();
-            sender.start();
-
+			while (isRunning)
+			{
+				if (msgs.TryTake(out msg, 1000))
+				{
+					Console.WriteLine("Message Received: {0}", msg);
+				}
+			}
 		}
+
+        static void Main(string[] args)
+        {
+            receiver.start();
+            startReceiverThread();
+
+            while (true)
+            {
+                string msg = Console.ReadLine();
+                if (msg == "exit" || msg == "quit")
+                    break;
+                sender.sendMessage(msg);
+                Console.WriteLine("Message Sent: {0}", msg);
+            }
+            Console.WriteLine("Stopping Client.");
+       
+
+            receiver.stop();
+            isRunning = false;
+            receiver.getMsgQueue().Add(null);
+
+            Console.WriteLine("Everything is done!");
+
+        }
+
     }
 
 
-	// a value type that is typically used to 
-    // encapsulate small groups of related variables
-	//struct Data     {
-	//	int length;
-	//	byte[] data;
 
-	//	public Data(int length, byte[] data)    {
- //           this.length = length;
-	//		this.data = data;
-	//	}
-	//}
 }
