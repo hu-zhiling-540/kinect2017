@@ -75,16 +75,17 @@ public class Receiver implements Runnable {
         // Check given file is Simple Text File using Java
         else if (args.length == 1) {
             try {
+                // ../Preference.txt
                 Scanner reader = new Scanner(new FileInputStream(args[0]));
-                ipAddress = reader.nextLine();
                 port = reader.nextInt();
+                ipAddress = reader.nextLine();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
 
         }
         else if (args.length == 2)  {
-            port = Integer.parseInt(args[1]);
+            port = Integer.parseInt(args[0]);
         }
 
         Receiver receiver = new Receiver(port);
