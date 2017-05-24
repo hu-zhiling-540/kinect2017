@@ -1,11 +1,16 @@
-import java.io.FileInputStream;
+
+import com.oracle.javafx.jmx.json.JSONException;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -56,37 +61,49 @@ public class Receiver implements Runnable {
         }
     }
 
+    /**
+     * Stops the thread that is running and shut down
+     */
     public void stop() {
         // interrupt a blocked socket.
         isRunning = false;
         mySocket.close();
     }
 
+
     public BlockingQueue<byte[]> getMsgQueue() {
         return receivedMsgs;
     }
 
     public static void main(String[] args) {
-        String ipAddress = null;
+//        String ipAddress = null;
+        JSONParser parser = new JSONParser();
         int port = -1;
         if (args.length < 1) {
 
         }
         // Check given file is Simple Text File using Java
-        else if (args.length == 1) {
-            try {
-                // ../Preference.txt
-                Scanner reader = new Scanner(new FileInputStream(args[0]));
-                port = reader.nextInt();
-                ipAddress = reader.nextLine();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
+        else if (args.length == 1) try {
+            Object obj = parser.parse(new FileReader(args[0]));
+            JSONObject jsonObject = (JSONObject) obj;
 
+            port =  Integer.parseInt((String) jsonObject.get("port"));
+//                ipAddress = (String)jsonObject.get("ip address");
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
         else if (args.length == 2)  {
             port = Integer.parseInt(args[0]);
+//            ipAddress = args[1];
         }
+        else
+            System.out.println("Invalid arguments");
 
         Receiver receiver = new Receiver(port);
         new Thread(receiver).start();

@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-
 namespace UDP_Connection
 {
 
@@ -35,7 +34,6 @@ namespace UDP_Connection
 		public void sendMessage(byte[] msg)
 		{
 			mySocket.SendTo(msg, remoteIPEP);
-
 		}
 
 		///<summary>
@@ -44,9 +42,8 @@ namespace UDP_Connection
 		public void sendMessage(string msg)
         {
             mySocket.SendTo(Encoding.ASCII.GetBytes(msg), remoteIPEP);
-
         }
 
 
-    }
+	}
 }
