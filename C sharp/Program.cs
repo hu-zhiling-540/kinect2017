@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.IO;
-using System.Net;
-using System.Threading;
+using SimpleJSON;
 
 namespace UDP_Connection
 {
@@ -55,23 +53,32 @@ namespace UDP_Connection
             int port = -1;
             //receiver.start();
             //startReceiverThread();
-            if (args.Length == 1)
+
+            // json file path as command line argument
+            if (args.Length >= 0)
             {
-                if (File.Exists(args[0]))
+                //new StreamReader(path)
+                string json_string = null;
+                using (var fs = new FileStream(args[0], FileMode.Open, FileAccess.Read))
                 {
-                    string filePath = System.IO.Path.GetFullPath(args[0]);
-                    using (StreamReader sr = new StreamReader(filePath))
+                    using (var sr = new System.IO.StreamReader(fs))
                     {
-                        port = Int32.Parse(sr.ReadLine());
-                        ipAddress = sr.ReadLine();
+                        json_string = sr.ReadToEnd();
                     }
                 }
+                var pref = JSON.Parse(json_string);
+                port = pref["port"].AsInt;                 // versionString will be a int containing "8008"
+                ipAddress = pref["ip address"].Value;      // will be a string containing "127.0.0.1"
             }
+
             else if (args.Length == 2)
             {
                 port = Int32.Parse(args[0]);
                 ipAddress = args[1];
             }
+
+            else
+                Console.WriteLine("Invalid arguments");
 
             UDP_Sender sender = new UDP_Sender(ipAddress, port);
 
