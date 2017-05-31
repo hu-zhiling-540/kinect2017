@@ -5,8 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KinectSkeleton"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Kinect v2 | MainWindow" Height="350" Width="525" Loaded="Window_Loaded" Closed="Windowd_Close">
     <Grid>
-        
+        <Image Name="image" HorizontalAlignment="Left" Height="192" Margin="84,51,0,0" VerticalAlignment="Top" Width="360"/>
+        <Canvas Name="canvas" HorizontalAlignment="Left" Height="206" Margin="84,51,0,0" VerticalAlignment="Top" Width="360"/>
+        <Button Content="Body" Click="bodyButton" HorizontalAlignment="Left" Margin="38,275,0,0" VerticalAlignment="Top" Width="75"/>
+
     </Grid>
 </Window>

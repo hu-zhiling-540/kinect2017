@@ -24,7 +24,7 @@ namespace KinectSkeleton
     public partial class MainWindow : Window
     {
         KinectSensor mySensor;
-        MultiSourceFrame myFrame;
+        // MultiSourceFrame myFrame;
         MultiSourceFrameReader myReader;
         Body[] bodies;
         WriteableBitmap bitmap;
@@ -129,6 +129,7 @@ namespace KinectSkeleton
                         // convert it to string
                         string bodyList = JsonConvert.SerializeObject(bdList);
                         // send the data
+                        Console.WriteLine(bodyList);
                     }
                 }
             }
@@ -171,7 +172,7 @@ namespace KinectSkeleton
             }
         }
 
-        private void close()
+        private void Windowd_Close(object sender, EventArgs e)
         {
             if (myReader != null)
             {
@@ -185,5 +186,22 @@ namespace KinectSkeleton
                 mySensor = null;
             }
         }
+
+        private void bodyButton(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void colorButton(object sender, RoutedEventArgs e)
+        {
+
+        }
+    }
+
+    public enum Stream
+    {
+        Body,
+        Color,
+        Depth,
+        Infrared
     }
 }
