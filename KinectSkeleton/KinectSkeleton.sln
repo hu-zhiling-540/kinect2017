@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectSkeleton", "KinectSke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinectStreams", "..\..\..\Downloads\KinectStreams\KinectStreams\KinectStreams.csproj", "{8E562BEB-7EEB-4BF3-B846-BDBFDBA41629}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UDP_Connection", "..\C sharp\UDP_Connection.csproj", "{C4DBFFFB-7E8A-4D2D-B1A3-C2C727B0E71C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8E562BEB-7EEB-4BF3-B846-BDBFDBA41629}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E562BEB-7EEB-4BF3-B846-BDBFDBA41629}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E562BEB-7EEB-4BF3-B846-BDBFDBA41629}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4DBFFFB-7E8A-4D2D-B1A3-C2C727B0E71C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4DBFFFB-7E8A-4D2D-B1A3-C2C727B0E71C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4DBFFFB-7E8A-4D2D-B1A3-C2C727B0E71C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4DBFFFB-7E8A-4D2D-B1A3-C2C727B0E71C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

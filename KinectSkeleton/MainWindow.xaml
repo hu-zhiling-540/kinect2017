@@ -10,6 +10,7 @@
         <Image Name="image" HorizontalAlignment="Left" Height="192" Margin="84,51,0,0" VerticalAlignment="Top" Width="360"/>
         <Canvas Name="canvas" HorizontalAlignment="Left" Height="206" Margin="84,51,0,0" VerticalAlignment="Top" Width="360"/>
         <Button Content="Body" Click="bodyButton" HorizontalAlignment="Left" Margin="38,275,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="Color" Click="colorButton" HorizontalAlignment="Left" Margin="131,275,0,0" VerticalAlignment="Top" Width="75"/>
 
     </Grid>
 </Window>

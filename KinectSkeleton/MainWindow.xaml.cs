@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -27,7 +28,10 @@ namespace KinectSkeleton
         // MultiSourceFrame myFrame;
         MultiSourceFrameReader myReader;
         Body[] bodies;
-        WriteableBitmap bitmap;
+        WriteableBitmap outputImg = null;
+        byte[] framePixels = null;
+        // default mode
+        Stream streamChoice = Stream.Color;
 
 
         public MainWindow()
@@ -40,14 +44,19 @@ namespace KinectSkeleton
             // select the default sensor
             mySensor = KinectSensor.GetDefault();
 
+            // enable data streaming
             if (mySensor != null)
             {
                 // open the sensor
                 mySensor.Open();
                 // open reader for frame source, specify which streams to be used
                 myReader = mySensor.OpenMultiSourceFrameReader(FrameSourceTypes.Body|FrameSourceTypes.Depth|FrameSourceTypes.Color);
-                // set up call back
+                // register an event that fires each time a frame is ready
                 myReader.MultiSourceFrameArrived += multiSouceFrameArrived;
+
+               
+
+                image.Source = outputImg;
             }
         }
 
@@ -101,6 +110,9 @@ namespace KinectSkeleton
 
         List<Body> bdList = new List<Body>();
 
+        // each time the sensor has a new frame of data available, 
+        // implement an event handler, store the code 
+        // sender object is the KinectSensor that fired the event
         private void multiSouceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             var frame = e.FrameReference.AcquireFrame();
@@ -151,11 +163,29 @@ namespace KinectSkeleton
             {
                 if (cFrame != null)
                 {
+                    if (streamChoice == Stream.Color)
+                    {
+                        //image.Source = cFrame.ToBitmap();
 
+                        FrameDescription fd = cFrame.FrameDescription;
+                        
+                        outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
+                        framePixels = new byte[fd.Width * fd.Height * 4];
+                        cFrame.CopyConvertedFrameDataToArray(framePixels, ColorImageFormat.Bgra);
+
+
+
+                        outputImg.Lock();
+                        Marshal.Copy(framePixels, 0, outputImg.BackBuffer, framePixels.Length);
+                        outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
+                        outputImg.Unlock();
+                        image.Source = this.outputImg;
+                    }
                 }
             }
             #endregion  
         }
+
 
         private void drawBodies()
         {
