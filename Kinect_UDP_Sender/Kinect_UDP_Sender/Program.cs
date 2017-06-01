@@ -7,12 +7,6 @@ namespace UDP_Connection
 
     class Program
     {
-
-        //static string ip_address = "127.0.0.1";
-        //static int port = 8008;
-
-        // static UDP_Receiver receiver = new UDP_Receiver(port);
-
         public static UDP_Sender sender = null;
         static public bool isRunning = true;
 
@@ -20,8 +14,6 @@ namespace UDP_Connection
         {
             string ipAddress = null;
             int port = -1;
-            //receiver.start();
-            //startReceiverThread();
 
             // json file path as command line argument
             if (args.Length >= 0)
@@ -52,7 +44,8 @@ namespace UDP_Connection
             sender = new UDP_Sender(ipAddress, port);
 
             KinectController kinect = new KinectController();
-            kinect.frameReceived += KinectFrameReceived;
+            //kinect.BodyFrameReceived += KinectBodyFrameReceived;
+            kinect.ColorFrameReceived += KinectColorFrameReceived;
 
             while (true)
             {
@@ -60,23 +53,24 @@ namespace UDP_Connection
                 if (msg == "exit" || msg == "quit")
                     break;
                 sender.sendMessage(msg);
-                Console.WriteLine("Message Sent: {0}", msg);
+                //Console.WriteLine("Message Sent: {0}", msg);
             }
-            Console.WriteLine("Stopping Client.");
+            //Console.WriteLine("Stopping Client.");
 
-            //            receiver.stop();
-            //isRunning = false;
-            //          receiver.getMsgQueue().Add(null);
-
-            Console.WriteLine("Everything is done!");
+            //Console.WriteLine("Everything is done!");
 
         }
 
-        static void KinectFrameReceived(object obj, FrameReceivedEventArgs f)
+        private static void KinectColorFrameReceived(object obj, ColorFrameReceivedEventArgs c)
         {
-            Console.WriteLine("New Frame Arrived");
-            Console.Write(f.frameData);
-            sender.sendMessage(f.frameData);
+            Console.WriteLine(c.ColorFrameData);
+            sender.sendMessage(c.ColorFrameData);
+        }
+
+        static void KinectBodyFrameReceived(object obj, BodyFrameReceivedEventArgs f)
+        {
+            Console.WriteLine(f.BodyFrameData);
+            sender.sendMessage(f.BodyFrameData);
 
         }
 

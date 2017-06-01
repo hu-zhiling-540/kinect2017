@@ -164,7 +164,7 @@ namespace KinectSkeleton
                     {
                         // setting the image (defined in xaml file) to the color data
                         //image.Source = cFrame.ToBitmap();
-                        image.Source = cFrame.colorDisplay();
+                        image.Source = cFrame.ColorDisplay();
                     }
                 }
             }

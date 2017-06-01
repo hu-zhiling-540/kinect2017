@@ -15,7 +15,7 @@ namespace KinectSkeleton
     {
 
         #region camera
-        public static WriteableBitmap colorDisplay(this ColorFrame frame)
+        public static WriteableBitmap ColorDisplay(this ColorFrame frame)
         {
             FrameDescription fd = frame.FrameDescription;
             // create a bitmap to store the data

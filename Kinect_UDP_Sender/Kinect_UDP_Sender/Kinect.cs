@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 
 using Microsoft.Kinect;
+using System.Runtime.InteropServices;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Newtonsoft.Json;
 
 namespace UDP_Connection
@@ -20,6 +19,7 @@ namespace UDP_Connection
         //WriteableBitmap outputImg = null;
         //byte[] framePixels = null;
         List<Body> bdList = new List<Body>();
+        StreamType readStream = StreamType.Body;
 
         public KinectController()
         {
@@ -38,7 +38,8 @@ namespace UDP_Connection
             #region Body
             using (BodyFrame bdFrame = frame.BodyFrameReference.AcquireFrame())
             {
-                if (bdFrame != null)
+                //&& readStream == StreamType.Body
+                if (bdFrame != null )
                 {
                     bodies = new Body[bdFrame.BodyFrameSource.BodyCount];
                     bdFrame.GetAndRefreshBodyData(bodies);
@@ -57,9 +58,7 @@ namespace UDP_Connection
                     {
                         //// convert it to string
                         //string bodyList = JsonConvert.SerializeObject(bdList);
-                        //// send the data
-                        //Console.WriteLine(bodyList);
-                        frameReceived(this, new FrameReceivedEventArgs(bdList));
+                        BodyFrameReceived(this, new BodyFrameReceivedEventArgs(bdList));
                     }
                 }
             }
@@ -70,26 +69,32 @@ namespace UDP_Connection
             {
                 if (dFrame != null)
                 {
-
+                   
                 }
             }
             #endregion  
 
 
             #region Color
-            //using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
-            //{
-            //    if (cFrame != null)
-            //    {
-            //        if (streamChoice == Stream.Color)
-            //        {
-            //            // setting the image (defined in xaml file) to the color data
-            //            //image.Source = cFrame.ToBitmap();
-            //            image.Source = cFrame.colorDisplay();
-            //        }
-            //    }
-            //}
+            using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
+            {
+                if (cFrame != null)
+                {
+                    ColorFrameReceived(this, new ColorFrameReceivedEventArgs(ColorDisplay(cFrame)));
+                }
+            }
             #endregion  
+        }
+
+        public byte[] ColorDisplay(ColorFrame frame)
+        {
+            FrameDescription fd = frame.FrameDescription;
+            // declare a member variable to store the pixel data and then allocate the memory array
+            byte[] colorFramePixels = new byte[fd.Width * fd.Height * 4];
+            // get the data
+            frame.CopyConvertedFrameDataToArray(colorFramePixels, ColorImageFormat.Bgra);
+
+            return colorFramePixels;
         }
 
         public void OpenKinect()
@@ -125,21 +130,41 @@ namespace UDP_Connection
             }
         }
 
-        public event EventHandler<FrameReceivedEventArgs> frameReceived;
+        public event EventHandler<BodyFrameReceivedEventArgs> BodyFrameReceived;
+        public event EventHandler<ColorFrameReceivedEventArgs> ColorFrameReceived;
     }
 
-    public class FrameReceivedEventArgs: EventArgs
+    public enum StreamType
     {
-        public string frameData {
+        Body,
+        Color,
+        Depth,
+        Infrared
+    }
+
+    public class BodyFrameReceivedEventArgs: EventArgs
+    {
+        public string BodyFrameData {
             get;
             set;
         }
-        public FrameReceivedEventArgs(List<Body> bdList)
+        public BodyFrameReceivedEventArgs(List<Body> bdList)
         {
             // convert it to string
-            this.frameData = JsonConvert.SerializeObject(bdList);
+            this.BodyFrameData = JsonConvert.SerializeObject(bdList);
         }
+    }
 
-
+    public class ColorFrameReceivedEventArgs: EventArgs
+    {
+        public string ColorFrameData
+        {
+            get;
+            set;
+        }
+        public ColorFrameReceivedEventArgs(byte[] colorFramePixels)
+        {
+            this.ColorFrameData = JsonConvert.SerializeObject(colorFramePixels);
+        }
     }
 }
