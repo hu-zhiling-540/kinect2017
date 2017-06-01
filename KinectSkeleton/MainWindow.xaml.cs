@@ -28,8 +28,9 @@ namespace KinectSkeleton
         // MultiSourceFrame myFrame;
         MultiSourceFrameReader myReader;
         Body[] bodies;
-        WriteableBitmap outputImg = null;
-        byte[] framePixels = null;
+        //WriteableBitmap outputImg = null;
+        //byte[] framePixels = null;
+
         // default mode
         Stream streamChoice = Stream.Color;
 
@@ -53,10 +54,6 @@ namespace KinectSkeleton
                 myReader = mySensor.OpenMultiSourceFrameReader(FrameSourceTypes.Body|FrameSourceTypes.Depth|FrameSourceTypes.Color);
                 // register an event that fires each time a frame is ready
                 myReader.MultiSourceFrameArrived += multiSouceFrameArrived;
-
-               
-
-                image.Source = outputImg;
             }
         }
 
@@ -166,20 +163,7 @@ namespace KinectSkeleton
                     if (streamChoice == Stream.Color)
                     {
                         //image.Source = cFrame.ToBitmap();
-
-                        FrameDescription fd = cFrame.FrameDescription;
-                        
-                        outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
-                        framePixels = new byte[fd.Width * fd.Height * 4];
-                        cFrame.CopyConvertedFrameDataToArray(framePixels, ColorImageFormat.Bgra);
-
-
-
-                        outputImg.Lock();
-                        Marshal.Copy(framePixels, 0, outputImg.BackBuffer, framePixels.Length);
-                        outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
-                        outputImg.Unlock();
-                        image.Source = this.outputImg;
+                        image.Source = cFrame.colorDisplay();
                     }
                 }
             }

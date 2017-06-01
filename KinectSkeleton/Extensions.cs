@@ -39,18 +39,18 @@ namespace KinectSkeleton
         #endregion
 
         #region camera
-        public static void newMethod(this ColorFrame frame)
+        public static WriteableBitmap newMethod(this ColorFrame frame)
         {
             FrameDescription fd = frame.FrameDescription;
             WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
-            ushort[] frameData = new ushort[fd.Width * fd.Height];
             byte[] framePixels = new byte[fd.Width * fd.Height * 4];
-
             frame.CopyConvertedFrameDataToArray(framePixels, ColorImageFormat.Bgra);
+
             outputImg.Lock();
             Marshal.Copy(framePixels, 0, outputImg.BackBuffer, framePixels.Length);
             outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
             outputImg.Unlock();
+            return outputImg;
         }
         #endregion
     }
