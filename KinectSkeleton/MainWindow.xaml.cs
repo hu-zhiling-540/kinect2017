@@ -162,6 +162,7 @@ namespace KinectSkeleton
                 {
                     if (streamChoice == Stream.Color)
                     {
+                        // setting the image (defined in xaml file) to the color data
                         //image.Source = cFrame.ToBitmap();
                         image.Source = cFrame.colorDisplay();
                     }
