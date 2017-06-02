@@ -44,21 +44,31 @@ namespace UDP_Connection
             sender = new UDP_Sender(ipAddress, port);
 
             KinectController kinect = new KinectController();
-            //kinect.BodyFrameReceived += KinectBodyFrameReceived;
-            kinect.ColorFrameReceived += KinectColorFrameReceived;
+
+            kinect.BodyFrameReceived += KinectBodyFrameReceived;
+            //kinect.ColorFrameReceived += KinectColorFrameReceived;
+
+            //while (true)
+            //{
+            //    string msg = Console.ReadLine();
+            //    if (msg == "exit" || msg == "quit")
+            //        break;
+            //    sender.sendMessage(msg);
+            //    //Console.WriteLine("Message Sent: {0}", msg);
+            //}
 
             while (true)
             {
-                string msg = Console.ReadLine();
-                if (msg == "exit" || msg == "quit")
-                    break;
-                sender.sendMessage(msg);
-                //Console.WriteLine("Message Sent: {0}", msg);
+                // if hit enter
+                if (Console.ReadKey().Key != ConsoleKey.Enter)  
+                {
+                    kinect.CloseKinect();
+					//kinect.BodyFrameReceived -= KinectBodyFrameReceived;
+					//Console.WriteLine("Stopping Client.");
+					break;
+                }
+
             }
-            //Console.WriteLine("Stopping Client.");
-
-            //Console.WriteLine("Everything is done!");
-
         }
 
         private static void KinectColorFrameReceived(object obj, ColorFrameReceivedEventArgs c)

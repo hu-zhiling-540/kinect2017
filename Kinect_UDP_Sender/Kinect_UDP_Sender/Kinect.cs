@@ -35,7 +35,8 @@ namespace UDP_Connection
             var frame = e.FrameReference.AcquireFrame();
             bdList.Clear();
 
-            #region Body
+			#region Body
+			// frame will be automatically disposed of when done using it
             using (BodyFrame bdFrame = frame.BodyFrameReference.AcquireFrame())
             {
                 //&& readStream == StreamType.Body
@@ -86,11 +87,17 @@ namespace UDP_Connection
             #endregion  
         }
 
-        public byte[] ColorDisplay(ColorFrame frame)
+
+		/// <summary>
+		/// For the best performance, allocate the memory for the data outside the event handler, 
+        /// since the event handler runs every frame
+		/// </summary>
+		public byte[] ColorDisplay(ColorFrame frame)
         {
             FrameDescription fd = frame.FrameDescription;
-            // declare a member variable to store the pixel data and then allocate the memory array
-            byte[] colorFramePixels = new byte[fd.Width * fd.Height * 4];
+			// store the pixel data and then allocate the memory array
+			//  Each byte will store the data from one pixel
+			byte[] colorFramePixels = new byte[fd.Width * fd.Height * 1];
             // get the data
             frame.CopyConvertedFrameDataToArray(colorFramePixels, ColorImageFormat.Bgra);
 
@@ -115,7 +122,7 @@ namespace UDP_Connection
         }
 
 
-        public void CloseKinect(object sender, EventArgs e)
+        public void CloseKinect()
         {
             if (myReader != null)
             {

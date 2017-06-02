@@ -15,7 +15,7 @@ namespace UDP_Connection
         Socket mySocket = null;
 
 
-		///// <summary>
+		/// <summary>
 		/// Obtains the IP address, and port number of the endpoin
 		/// </summary>
 		/// <param name="ip_address">Ip address.</param>
