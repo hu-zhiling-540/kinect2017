@@ -26,10 +26,49 @@ namespace UDP_Connection
             OpenKinect();
 
         }
-        
-        // each time the sensor has a new frame of data available, 
-        // implement an event handler, store the code 
-        // sender object is the KinectSensor that fired the event
+
+        public void OpenKinect()
+        {
+            // select the default sensor
+            mySensor = KinectSensor.GetDefault();
+
+            // enable data streaming
+            if (mySensor != null)
+            {
+                // open the sensor
+                mySensor.Open();
+                // open reader for frame source, specify which streams to be used
+                myReader = mySensor.OpenMultiSourceFrameReader(FrameSourceTypes.Body | FrameSourceTypes.Depth | FrameSourceTypes.Color);
+                // register an event that fires each time a frame is ready
+                myReader.MultiSourceFrameArrived += MultiSouceFrameArrived;
+            }
+            else
+                throw new Exception("Unable to connect to Kinect sensor");
+        }
+
+
+        public void CloseKinect()
+        {
+            if (myReader != null)
+            {
+                myReader.Dispose();
+                myReader = null;
+            }
+
+            if (mySensor != null)
+            {
+                mySensor.Close();
+                mySensor = null;
+            }
+        }
+
+        /// <summary>
+        /// each time the sensor has a new frame of data available, 
+        /// implement an event handler, store the code 
+        /// sender object is the KinectSensor that fired the event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MultiSouceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             var frame = e.FrameReference.AcquireFrame();
@@ -59,7 +98,7 @@ namespace UDP_Connection
                     {
                         //// convert it to string
                         //string bodyList = JsonConvert.SerializeObject(bdList);
-                        BodyFrameReceived(this, new BodyFrameReceivedEventArgs(bdList));
+                        BodyFrameReady(this, new BodyFrameReadyEventArgs(bdList));
                     }
                 }
             }
@@ -81,7 +120,7 @@ namespace UDP_Connection
             {
                 if (cFrame != null)
                 {
-                    ColorFrameReceived(this, new ColorFrameReceivedEventArgs(ColorDisplay(cFrame)));
+                    ColorFrameReady(this, new ColorFrameReadyEventArgs(ColorFrameProcessor(cFrame)));
                 }
             }
             #endregion  
@@ -92,53 +131,53 @@ namespace UDP_Connection
 		/// For the best performance, allocate the memory for the data outside the event handler, 
         /// since the event handler runs every frame
 		/// </summary>
-		public byte[] ColorDisplay(ColorFrame frame)
+		private byte[] ColorFrameProcessor(ColorFrame frame)
         {
             FrameDescription fd = frame.FrameDescription;
 			// store the pixel data and then allocate the memory array
-			//  Each byte will store the data from one pixel
-			byte[] colorFramePixels = new byte[fd.Width * fd.Height * 1];
+			//  4 bytes will store the data from one pixel
+			byte[] colorFramePixels = new byte[fd.Width * fd.Height * 4];
             // get the data
+            // color image frame is in BGRA format; BGRA has 4 bytes of data per pixel
             frame.CopyConvertedFrameDataToArray(colorFramePixels, ColorImageFormat.Bgra);
 
             return colorFramePixels;
         }
 
-        public void OpenKinect()
+        private byte[] DepthFrameProcessor(DepthFrame frame)
         {
-            // select the default sensor
-            mySensor = KinectSensor.GetDefault();
+            FrameDescription fd = frame.FrameDescription;
+            byte[] depthFramePixels = new byte[fd.Width * fd.Height];
 
-            // enable data streaming
-            if (mySensor != null)
-            {
-                // open the sensor
-                mySensor.Open();
-                // open reader for frame source, specify which streams to be used
-                myReader = mySensor.OpenMultiSourceFrameReader(FrameSourceTypes.Body | FrameSourceTypes.Depth | FrameSourceTypes.Color);
-                // register an event that fires each time a frame is ready
-                myReader.MultiSourceFrameArrived += MultiSouceFrameArrived;
-            }
+            return depthFramePixels;
         }
 
-
-        public void CloseKinect()
+        private byte[] InfraredFrameProcessor(InfraredFrame frame)
         {
-            if (myReader != null)
-            {
-                myReader.Dispose();
-                myReader = null;
-            }
+            FrameDescription fd = frame.FrameDescription;
+            
+            ushort[] temp = new ushort[fd.Width * fd.Height];
+            //copy the infrared frame data to an unsigned short array
+            frame.CopyFrameDataToArray(temp);
+            // * bytes per pixel
+            byte[] pixels = new byte[fd.Width * fd.Height * 4];
+            
+            return pixels;
 
-            if (mySensor != null)
-            {
-                mySensor.Close();
-                mySensor = null;
-            }
         }
 
-        public event EventHandler<BodyFrameReceivedEventArgs> BodyFrameReceived;
-        public event EventHandler<ColorFrameReceivedEventArgs> ColorFrameReceived;
+        
+
+
+
+        // event that fires when a new body frame is available
+        public event EventHandler<BodyFrameReadyEventArgs> BodyFrameReady;
+        
+        // event that fires when a new color frame is available
+        public event EventHandler<ColorFrameReadyEventArgs> ColorFrameReady;
+
+        // event that fires when a new depth frame is available
+        public event EventHandler<DepthFrameReadyEventArgs> DepthFrameReady;
     }
 
     public enum StreamType
@@ -149,29 +188,42 @@ namespace UDP_Connection
         Infrared
     }
 
-    public class BodyFrameReceivedEventArgs: EventArgs
+    public class BodyFrameReadyEventArgs: EventArgs
     {
         public string BodyFrameData {
             get;
             set;
         }
-        public BodyFrameReceivedEventArgs(List<Body> bdList)
+        public BodyFrameReadyEventArgs(List<Body> bdList)
         {
             // convert it to string
             this.BodyFrameData = JsonConvert.SerializeObject(bdList);
         }
     }
 
-    public class ColorFrameReceivedEventArgs: EventArgs
+    public class ColorFrameReadyEventArgs: EventArgs
     {
-        public string ColorFrameData
+        public byte[] ColorFrameData
         {
             get;
             set;
         }
-        public ColorFrameReceivedEventArgs(byte[] colorFramePixels)
+        public ColorFrameReadyEventArgs(byte[] colorFramePixels)
         {
-            this.ColorFrameData = JsonConvert.SerializeObject(colorFramePixels);
+            this.ColorFrameData = colorFramePixels;
         }
     }
-}
+
+    public class DepthFrameReadyEventArgs : EventArgs
+    {
+        public byte[] DepthFrameData
+        {
+            get;
+            set;
+        }
+        public DepthFrameReadyEventArgs(byte[] depthFramePixels)
+        {
+            this.DepthFrameData = depthFramePixels;
+        }
+    }
+    }

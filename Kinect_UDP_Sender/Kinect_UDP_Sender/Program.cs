@@ -10,6 +10,12 @@ namespace UDP_Connection
         public static UDP_Sender sender = null;
         static public bool isRunning = true;
 
+        StreamType readingStream = StreamType.Body;
+        public void SetStream(StreamType readingStream)
+        {
+            this.readingStream = readingStream;
+        }
+
         static void Main(string[] args)
         {
             string ipAddress = null;
@@ -45,22 +51,13 @@ namespace UDP_Connection
 
             KinectController kinect = new KinectController();
 
-            kinect.BodyFrameReceived += KinectBodyFrameReceived;
+            kinect.BodyFrameReady += KinectBodyFrameReceived;
             //kinect.ColorFrameReceived += KinectColorFrameReceived;
-
-            //while (true)
-            //{
-            //    string msg = Console.ReadLine();
-            //    if (msg == "exit" || msg == "quit")
-            //        break;
-            //    sender.sendMessage(msg);
-            //    //Console.WriteLine("Message Sent: {0}", msg);
-            //}
 
             while (true)
             {
                 // if hit enter
-                if (Console.ReadKey().Key != ConsoleKey.Enter)  
+                if (Console.ReadKey().Key == ConsoleKey.Enter)  
                 {
                     kinect.CloseKinect();
 					//kinect.BodyFrameReceived -= KinectBodyFrameReceived;
@@ -71,17 +68,16 @@ namespace UDP_Connection
             }
         }
 
-        private static void KinectColorFrameReceived(object obj, ColorFrameReceivedEventArgs c)
+        private static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
-            Console.WriteLine(c.ColorFrameData);
+            Console.WriteLine("Color Frame");
             sender.sendMessage(c.ColorFrameData);
         }
 
-        static void KinectBodyFrameReceived(object obj, BodyFrameReceivedEventArgs f)
+        static void KinectBodyFrameReceived(object obj, BodyFrameReadyEventArgs f)
         {
             Console.WriteLine(f.BodyFrameData);
             sender.sendMessage(f.BodyFrameData);
-
         }
 
     }
