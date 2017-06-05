@@ -2,7 +2,7 @@
 using System.IO;
 using SimpleJSON;
 
-namespace UDP_Connection
+namespace Kinect_UDP_Sender
 {
 
     class Program
