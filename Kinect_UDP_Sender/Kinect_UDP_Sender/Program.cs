@@ -57,18 +57,18 @@ namespace UDP_Connection
             while (true)
             {
                 // if hit enter
-                if (Console.ReadKey().Key == ConsoleKey.Enter)  
+                if (Console.ReadKey().Key == ConsoleKey.Enter)
                 {
                     kinect.CloseKinect();
-					//kinect.BodyFrameReceived -= KinectBodyFrameReceived;
-					//Console.WriteLine("Stopping Client.");
-					break;
+                    //kinect.BodyFrameReceived -= KinectBodyFrameReceived;
+                    //Console.WriteLine("Stopping Client.");
+                    break;
                 }
 
             }
         }
 
-        private static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
+        static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
             Console.WriteLine("Color Frame");
             sender.sendMessage(c.ColorFrameData);
@@ -79,6 +79,12 @@ namespace UDP_Connection
             Console.WriteLine(f.BodyFrameData);
             sender.sendMessage(f.BodyFrameData);
         }
+
+		static void KinectDepthFrameReceived(object obj, DepthFrameReadyEventArgs f)
+		{
+			Console.WriteLine(f.DepthFrameData);
+			sender.sendMessage(f.DepthFrameData);
+		}
 
     }
 

@@ -129,27 +129,87 @@ namespace UDP_Connection
 
 		/// <summary>
 		/// For the best performance, allocate the memory for the data outside the event handler, 
-        /// since the event handler runs every frame
+		/// since the event handler runs every frame
 		/// </summary>
-		private byte[] ColorFrameProcessor(ColorFrame frame)
-        {
-            FrameDescription fd = frame.FrameDescription;
+		private static WriteableBitmap ColorFrameProcessor(this ColorFrame frame)
+		{
+			FrameDescription fd = frame.FrameDescription;
+			// create a bitmap to store the data
+			WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
 			// store the pixel data and then allocate the memory array
 			//  4 bytes will store the data from one pixel
-			byte[] colorFramePixels = new byte[fd.Width * fd.Height * 4];
-            // get the data
-            // color image frame is in BGRA format; BGRA has 4 bytes of data per pixel
-            frame.CopyConvertedFrameDataToArray(colorFramePixels, ColorImageFormat.Bgra);
+            byte[] colorFramePixels = new byte[fd.Width * fd.Height * 4];
+			// get the data
+			// color image frame is in BGRA format; BGRA has 4 bytes of data per pixel
+			frame.CopyConvertedFrameDataToArray(framePixels, ColorImageFormat.Bgra);
 
-            return colorFramePixels;
-        }
+			outputImg.Lock();           // reserve the back buffer for updates
+										// write the pixel data into the bitmap
+			Marshal.Copy(framePixels, 0, outputImg.BackBuffer, framePixels.Length);
+			// specify the area of the bitmap that changed
+			outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
+			outputImg.Unlock();         //  release the back buffer to make it available for display.
+			
+            return outputImg;
+		}
 
         private byte[] DepthFrameProcessor(DepthFrame frame)
         {
             FrameDescription fd = frame.FrameDescription;
-            byte[] depthFramePixels = new byte[fd.Width * fd.Height];
+			// Each pixel of depth data is stored in a short; therefore the array in this method is an array of shorts.
+			short[] temp = new ushort[fd.Width * fd.Height];
+            byte[] depthFramePixels = new byte[fd.Width * fd.Height * 4];
+			// create a bitmap to store the data
+			WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
 
-            return depthFramePixels;
+            frame.CopyPixelDataTo(temp);
+
+			// Get the min and max reliable depth for the current frame
+			int minDepth = frame.MinDepth;
+			int maxDepth = frame.MaxDepth;
+
+            DepthImagePixel[] depthPixels = new DepthImagePixel[mySensor.DepthStream.FramePixelDataLength];
+
+			// Convert the depth to RGB
+			int colorPixelIndex = 0;
+
+            for (int depthIndex = 0, colorIndex = 0; depthIndex<temp.Length && colorIndex<depthFramePixels.Length; depthIndex++, colorIndex += 4)
+			{
+                // Get the depth for this pixel
+                short depth = temp[depthIndex];
+
+				// To convert to a byte, we're discarding the most-significant
+				// rather than least-significant bits.
+				// We're preserving detail, although the intensity will "wrap."
+				// Values outside the reliable depth range are mapped to 0 (black).
+
+				// Note: Using conditionals in this loop could degrade performance.
+				// Consider using a lookup table instead when writing production code.
+				// See the KinectDepthViewer class used by the KinectExplorer sample
+				// for a lookup table example.
+				byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
+
+				// Write out blue byte
+                depthFramePixels[colorIndex++] = intensity;
+
+				// Write out green byte
+                depthFramePixels[colorIndex++] = intensity;
+
+				// Write out red byte                        
+                depthFramePixels[colorIndex++] = intensity;
+
+				++colorPixelIndex;
+			}
+
+            int stride = fd.Width * FormatException.BitsPerPixel / 8;
+
+			//  use the WriteableBitmap to display the mapped depth data.
+			// Use the WriteableBitmap.WritePixels method to save the pixel data
+			outputImg.WritePixels(new Int32Rect(0, 0, fd.Width, fd.Height), 
+                                  depthFramePixels, this.colorBitmap.PixelWidth * sizeof(int),
+                                  0);
+
+			return depthFramePixels;
         }
 
         private byte[] InfraredFrameProcessor(InfraredFrame frame)
@@ -160,8 +220,34 @@ namespace UDP_Connection
             //copy the infrared frame data to an unsigned short array
             frame.CopyFrameDataToArray(temp);
             // * bytes per pixel
-            byte[] pixels = new byte[fd.Width * fd.Height * 4];
-            
+            byte[] pixels = new byte[fd.Width * fd.Height * (PixelFormats.Bgr32.BitsPerPixel + 7) / 8];
+
+            frame.CopyFrameDataToArray(temp);
+
+			int colorIndex = 0;
+            for (int infraredIndex = 0; infraredIndex < temp.Length; ++infraredIndex)
+			{
+				ushort ir = temp[infraredIndex];
+				byte intensity = (byte)(ir >> 8);
+
+                pixels[colorIndex++] = intensity; // Blue
+                pixels[colorIndex++] = intensity; // Green   
+                pixels[colorIndex++] = intensity; // Red
+
+				// ++colorIndex;
+				// If we were outputting BGRA, we would write alpha here.
+				pixelData[colorIndex++] = 255;       //Alpha 
+			}
+
+			int stride = width * format.BitsPerPixel / 8;
+
+			// create a bitmap to store the data
+			WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
+
+
+			outputImg.WritePixels(new Int32Rect(0, 0, fd.Width, fd.Height),
+								  depthFramePixels, this.colorBitmap.PixelWidth * sizeof(int),
+								  0);
             return pixels;
 
         }
@@ -178,6 +264,9 @@ namespace UDP_Connection
 
         // event that fires when a new depth frame is available
         public event EventHandler<DepthFrameReadyEventArgs> DepthFrameReady;
+
+	    // event that fires when a new infrared frame is available
+	    public event EventHandler<InfraredFrameReadyEventArgs> InfraredFrameReady;
     }
 
     public enum StreamType
@@ -214,7 +303,7 @@ namespace UDP_Connection
         }
     }
 
-    public class DepthFrameReadyEventArgs : EventArgs
+    public class DepthFrameReadyEventArgs: EventArgs
     {
         public byte[] DepthFrameData
         {
@@ -226,4 +315,18 @@ namespace UDP_Connection
             this.DepthFrameData = depthFramePixels;
         }
     }
+
+    public class InfraredFrameReadyEventArgs: EventArgs
+    {
+        public byte[] InfraredFrameData
+        {
+            get;
+            set;
+        }
+        public InfraredFrameReadyEventArgs(byte[] infraredFramePixels)
+		{
+			this.InfraredFrameData = infraredFramePixels;
+		}
     }
+
+}
