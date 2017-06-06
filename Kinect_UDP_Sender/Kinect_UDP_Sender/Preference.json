@@ -1,4 +1,5 @@
 {
-	"port": "8008", 
-	"ip address": "127.0.0.1"
+	"port": "8008",
+  "ip address": "127.0.0.1",
+  "stream":  "Body"
 }

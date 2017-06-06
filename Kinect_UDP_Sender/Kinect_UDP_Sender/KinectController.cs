@@ -23,7 +23,7 @@ namespace Kinect_UDP_Sender
         //byte[] framePixels = null;
         List<Body> bdList = new List<Body>();
 
-        StreamType readStream = StreamType.Body;
+        StreamType myStream = StreamType.Color;
 
         public KinectController()
         {
@@ -66,6 +66,25 @@ namespace Kinect_UDP_Sender
             }
         }
 
+        public void SetStreamType(string streamName)
+        {
+            switch (streamName)
+            {
+                case "Color":
+                    myStream = StreamType.Color;
+                    break;
+                case "Depth":
+                    myStream = StreamType.Depth;
+                    break;
+                case "Infrared":
+                    myStream = StreamType.Infrared;
+                    break;
+                case "Body":
+                    myStream = StreamType.Body;
+                    break;
+            }
+        }
+
         /// <summary>
         /// each time the sensor has a new frame of data available, 
         /// implement an event handler, store the code 
@@ -82,8 +101,7 @@ namespace Kinect_UDP_Sender
             // frame will be automatically disposed of when done using it
             using (BodyFrame bdFrame = frame.BodyFrameReference.AcquireFrame())
             {
-                //&& readStream == StreamType.Body
-                if (bdFrame != null)
+                if (bdFrame != null && myStream == StreamType.Body)
                 {
                     bodies = new Body[bdFrame.BodyFrameSource.BodyCount];
                     bdFrame.GetAndRefreshBodyData(bodies);
@@ -112,7 +130,7 @@ namespace Kinect_UDP_Sender
             #region Depth
             using (DepthFrame dFrame = frame.DepthFrameReference.AcquireFrame())
             {
-                if (dFrame != null)
+                if (dFrame != null && myStream == StreamType.Depth)
                 {
                     DepthFrameReady(this, new DepthFrameReadyEventArgs(dFrame.DepthFrameProcessor()));
                 }
@@ -123,7 +141,7 @@ namespace Kinect_UDP_Sender
             #region Color
             using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
             {
-                if (cFrame != null)
+                if (cFrame != null && myStream == StreamType.Color)
                 {
                     ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
                 }
@@ -133,7 +151,7 @@ namespace Kinect_UDP_Sender
             #region Infrared
             using (InfraredFrame iFrame = frame.InfraredFrameReference.AcquireFrame())
             {
-                if (iFrame != null)
+                if (iFrame != null && myStream == StreamType.Infrared)
                 {
                     InfraredFrameReady(this, new InfraredFrameReadyEventArgs(iFrame.InfraredFrameProcessor()));
                 }
@@ -169,8 +187,7 @@ namespace Kinect_UDP_Sender
         public BodyFrameReadyEventArgs(List<Body> bdList)
         {
             // convert it to string
-            //this.BodyFrameData = JsonConvert.SerializeObject(bdList);
-            this.BodyFrameData = bdList.WriteSkeletons().WriteFromObject();
+            this.BodyFrameData = JsonConvert.SerializeObject(bdList);
         }
     }
 

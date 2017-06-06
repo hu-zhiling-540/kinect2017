@@ -11,7 +11,7 @@ using System.Windows.Media.Imaging;
 
 namespace Kinect_UDP_Sender
 {
-    static class Extensions
+    static class KinectExtensions
     {
         /// <summary>
 		/// For the best performance, allocate the memory for the data outside the event handler, 

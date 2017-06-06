@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using SimpleJSON;
+using System.Runtime.Serialization.Json;
+using System.Text;
 
 namespace Kinect_UDP_Sender
 {
@@ -10,25 +12,37 @@ namespace Kinect_UDP_Sender
         public static UDP_Sender sender = null;
         static public bool isRunning = true;
 
-        StreamType readingStream = StreamType.Body;
-        public void SetStream(StreamType readingStream)
-        {
-            this.readingStream = readingStream;
-        }
+
+        // Create a User object and serialize it to a JSON stream.  
+        //public static string WriteFromObject(this Object obj)
+        //{
+        //    //Create a stream to serialize the object to.  
+        //    MemoryStream ms = new MemoryStream();
+
+        //    // Serializer the User object to the stream.  
+        //    DataContractJsonSerializer ser = new DataContractJsonSerializer(obj.GetType());
+        //    ser.WriteObject(ms, obj);
+        //    byte[] json = ms.ToArray();
+        //    Console.WriteLine(json.Length);
+        //    ms.Close();
+        //    return Encoding.UTF8.GetString(json, 0, json.Length);
+
+        //}
 
         static void Main(string[] args)
         {
             string ipAddress = null;
             int port = -1;
+            string stream = null;
 
             // json file path as command line argument
-            if (args.Length >= 0)
+            if (args.Length == 1)
             {
                 //new StreamReader(path)
                 string json_string = null;
                 using (var fs = new FileStream(args[0], FileMode.Open, FileAccess.Read))
                 {
-                    using (var sr = new System.IO.StreamReader(fs))
+                    using (var sr = new StreamReader(fs))
                     {
                         json_string = sr.ReadToEnd();
                     }
@@ -36,12 +50,22 @@ namespace Kinect_UDP_Sender
                 var pref = JSON.Parse(json_string);
                 port = pref["port"].AsInt;                 // versionString will be a int containing "8008"
                 ipAddress = pref["ip address"].Value;      // will be a string containing "127.0.0.1"
+                stream = pref["stream"].Value;
+                Console.WriteLine(stream);
             }
 
             else if (args.Length == 2)
             {
                 port = Int32.Parse(args[0]);
                 ipAddress = args[1];
+                stream = "Body";
+            }
+
+            else if (args.Length == 3)
+            {
+                port = Int32.Parse(args[0]);
+                ipAddress = args[1];
+                stream = args[2];
             }
 
             else
@@ -50,11 +74,13 @@ namespace Kinect_UDP_Sender
             sender = new UDP_Sender(ipAddress, port);
 
             KinectController kinect = new KinectController();
+            kinect.SetStreamType(stream);
+            
 
             kinect.BodyFrameReady += KinectBodyFrameReceived;
-            //kinect.ColorFrameReceived += KinectColorFrameReceived;
-            //kinect.DepthFrameReady += KinectDepthFrameReceived;
-            //kinect.InfraredFrameReady += KinectInfraredFrameReceived;
+            kinect.ColorFrameReady += KinectColorFrameReceived;
+            kinect.DepthFrameReady += KinectDepthFrameReceived;
+            kinect.InfraredFrameReady += KinectInfraredFrameReceived;
 
             while (true)
             {
