@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-namespace Kinect_UDP_Sender
+namespace UDP_Connection
 {
 
     class UDP_Sender

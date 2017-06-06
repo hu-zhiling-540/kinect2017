@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
-namespace Kinect_UDP_Sender
+namespace UDP_Connection
 {
 
     class UDP_Receiver
