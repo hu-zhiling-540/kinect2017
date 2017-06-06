@@ -93,6 +93,7 @@ namespace Kinect_UDP_Sender
                     {
                         if (body.IsTracked)
                         {
+                            Console.WriteLine("Object detected!");
                             bdList.Add(body);
                         }
                     }
@@ -153,10 +154,11 @@ namespace Kinect_UDP_Sender
 
         // event that fires when a new infrared frame is available
         public event EventHandler<InfraredFrameReadyEventArgs> InfraredFrameReady;
+        
     }
 
 
-
+    
     public class BodyFrameReadyEventArgs : EventArgs
     {
         public string BodyFrameData
@@ -167,7 +169,8 @@ namespace Kinect_UDP_Sender
         public BodyFrameReadyEventArgs(List<Body> bdList)
         {
             // convert it to string
-            this.BodyFrameData = JsonConvert.SerializeObject(bdList);
+            //this.BodyFrameData = JsonConvert.SerializeObject(bdList);
+            this.BodyFrameData = bdList.WriteSkeletons().WriteFromObject();
         }
     }
 

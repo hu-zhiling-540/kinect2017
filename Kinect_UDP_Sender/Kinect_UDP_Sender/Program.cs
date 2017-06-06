@@ -86,8 +86,7 @@ namespace Kinect_UDP_Sender
 			Console.WriteLine(d.DepthFrameData);
 			sender.sendMessage(d.DepthFrameData);
 		}
-
-
+        
         static void KinectInfraredFrameReceived(object obj, InfraredFrameReadyEventArgs i)
         {
             sender.sendMessage(i.InfraredFrameData);

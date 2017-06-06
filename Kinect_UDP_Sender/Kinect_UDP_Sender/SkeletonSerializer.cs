@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using Microsoft.Kinect;
 
 namespace Kinect_UDP_Sender
 {
@@ -18,7 +19,7 @@ namespace Kinect_UDP_Sender
 //"SpineMid":{"JointType":1,"Orientation":{"X":-0.053282842,"Y":0.9167501,"Z":-0.0933728,"W":0.384722918}},
 //"Neck":{"JointType":2,"Orientation":{"X":-0.0698294,"Y":0.907467246,"Z":-0.133008137,"W":0.39234665}},
         [DataContract]
-		public class JSONJoint
+		public class SkeletonJoint
         {
             // Print name is "JointType" instead of "Joint".
             [DataMember(Name = "JointType")]
@@ -30,61 +31,65 @@ namespace Kinect_UDP_Sender
         }
 
         [DataContract]
-        public class JSONSkel
+        public class Skeleton
         {
             public string TrackingId;
-            public List<JSONJoint> Joints;
+            public List<SkeletonJoint> Joints;
         }
 
         [DataContract]
-        public class JSONSkeletons
+        public class Skeletons
         {
-            public List<JSONSkel> Skeletons { get; set; }
+            public List<Skeleton> SkeletonsList;
         }
 
-        public static JSONSkeletons WriteSkeletons(List<JSONSkel> skeletons)
+        public static Skeletons WriteSkeletons(this List<Body> bodiesList)
         {
-            JSONSkeletons skels = new JSONSkeletons()
+            Skeletons skels = new Skeletons()
             {
-                Skeletons = new List<JSONSkel>()
+                SkeletonsList = new List<Skeleton>()
             };
-            foreach (var s in skeletons)
+            foreach (var body in bodiesList)
             {
-                JSONSkel skel = new JSONSkel()
+                Skeleton skel = new Skeleton()
                 {
-                    TrackingId = s.TrackingId,
-                    Joints = new List<JSONJoint>()
+                    TrackingId = body.TrackingId.ToString(),
+                    Joints = new List<SkeletonJoint>()
                 };
-                foreach (JSONJoint j in skel.Joints)
+                foreach (Joint j in body.Joints.Values)
                 {
-                    skel.Joints.Add(new JSONJoint
+                    skel.Joints.Add(new SkeletonJoint
                     {
-                        Name = j.JointType,
-                        X = j.JointType.Orientation.X,
-                        Y = j.JointType.Orientation.Y,
-                        Z = j.JointType.Orientation.Z
+                        
+                        Name = j.JointType.ToString(),
+                        //X = Horizontal position measured as the distance, in meters from the Kinect along the X Axis
+                        X = j.Position.X,
+                        //Y = Vertical position measured as the distance, in meters from the Kinect along the Y Axis
+                        Y = j.Position.Y,
+                        //Z = Distance from Kinect measured in meters
+                        Z = j.Position.Z
 
                     });
-                }
-                skels.Skeletons.Add((skel));
-            }
+                    Console.WriteLine(skel.Joints[0].Name);
+                    Console.WriteLine(skel.Joints[0].X);
 
+                }
+                skels.SkeletonsList.Add(skel);
+            }
             return skels;
         }
 
 		// Create a User object and serialize it to a JSON stream.  
-		public static string WriteFromObject(JSONSkeletons skels)
+		public static string WriteFromObject(this Object obj)
 		{
-			//Create User object
-
-
 			//Create a stream to serialize the object to.  
 			MemoryStream ms = new MemoryStream();
 
 			// Serializer the User object to the stream.  
-            DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(skels));
-			ser.WriteObject(ms, skels);
+            DataContractJsonSerializer ser = new DataContractJsonSerializer(obj.GetType());
+			ser.WriteObject(ms, obj);
 			byte[] json = ms.ToArray();
+            Console.WriteLine(json.Length);
 			ms.Close();
 			return Encoding.UTF8.GetString(json, 0, json.Length);
 
