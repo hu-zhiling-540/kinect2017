@@ -2,7 +2,7 @@
 using System.IO;
 using SimpleJSON;
 
-namespace UDP_Connection
+namespace Kinect_UDP_Sender
 {
 
     class Program
@@ -53,6 +53,8 @@ namespace UDP_Connection
 
             kinect.BodyFrameReady += KinectBodyFrameReceived;
             //kinect.ColorFrameReceived += KinectColorFrameReceived;
+            //kinect.DepthFrameReady += KinectDepthFrameReceived;
+            //kinect.InfraredFrameReady += KinectInfraredFrameReceived;
 
             while (true)
             {
@@ -70,7 +72,6 @@ namespace UDP_Connection
 
         static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
-            Console.WriteLine("Color Frame");
             sender.sendMessage(c.ColorFrameData);
         }
 
@@ -80,12 +81,17 @@ namespace UDP_Connection
             sender.sendMessage(f.BodyFrameData);
         }
 
-		static void KinectDepthFrameReceived(object obj, DepthFrameReadyEventArgs f)
+		static void KinectDepthFrameReceived(object obj, DepthFrameReadyEventArgs d)
 		{
-			Console.WriteLine(f.DepthFrameData);
-			sender.sendMessage(f.DepthFrameData);
+			Console.WriteLine(d.DepthFrameData);
+			sender.sendMessage(d.DepthFrameData);
 		}
 
+
+        static void KinectInfraredFrameReceived(object obj, InfraredFrameReadyEventArgs i)
+        {
+            sender.sendMessage(i.InfraredFrameData);
+        }
     }
 
 
