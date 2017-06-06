@@ -63,11 +63,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-<<<<<<< HEAD
     <Reference Include="System.Runtime.Serialization" />
-=======
     <Reference Include="WindowsBase" />
->>>>>>> origin/master
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions.cs" />
