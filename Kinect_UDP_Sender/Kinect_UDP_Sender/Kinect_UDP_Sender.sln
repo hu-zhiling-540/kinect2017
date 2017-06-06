@@ -1,6 +1,8 @@
-
-Microsoft Visual Studio Solution File, Format Version 15.00
-# Visual Studio 2017
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.12
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kinect_UDP_Sender", "Kinect_UDP_Sender.csproj", "{9FCD9CE0-B5A5-4072-B649-ABD21610B322}"
 EndProject
 Global
@@ -13,5 +15,8 @@ Global
 		{9FCD9CE0-B5A5-4072-B649-ABD21610B322}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9FCD9CE0-B5A5-4072-B649-ABD21610B322}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9FCD9CE0-B5A5-4072-B649-ABD21610B322}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
