@@ -1,5 +1,8 @@
 {
-	"port": "8008",
-  "ip address": "127.0.0.1",
-  "stream":  "Color"
+	"port number": "8008",
+  "host name": "127.0.0.1",
+  "Body Stream On": "false",
+  "Color Stream On": "true",
+  "Depth Stream On": "false",
+  "Infrared Stream On": "false"
 }

@@ -33,7 +33,12 @@ namespace Kinect_UDP_Sender
         {
             string ipAddress = null;
             int port = -1;
-            string stream = null;
+            bool bodyStreamOn = false;
+            bool colorStreamOn = false;
+            bool depthStreamOn = false;
+            bool infraredStreamOn = false;
+
+            //string stream = null;
 
             // json file path as command line argument
             if (args.Length == 1)
@@ -48,24 +53,21 @@ namespace Kinect_UDP_Sender
                     }
                 }
                 var pref = JSON.Parse(json_string);
-                port = pref["port"].AsInt;                 // versionString will be a int containing "8008"
-                ipAddress = pref["ip address"].Value;      // will be a string containing "127.0.0.1"
-                stream = pref["stream"].Value;
-                Console.WriteLine("reading value in: " + stream);
+                port = pref["port number"].AsInt;                 // should be "8008"
+                ipAddress = pref["host name"].Value;            // should be "127.0.0.1"
+
+                bodyStreamOn = pref["Body Stream On"].AsBool;
+                colorStreamOn = pref["Color Stream On"].AsBool;
+                depthStreamOn = pref["Depth Stream On"].AsBool;
+                infraredStreamOn = pref["Infrared Stream On"].AsBool;
             }
 
             else if (args.Length == 2)
             {
                 port = Int32.Parse(args[0]);
                 ipAddress = args[1];
-                stream = "Color";
-            }
-
-            else if (args.Length == 3)
-            {
-                port = Int32.Parse(args[0]);
-                ipAddress = args[1];
-                stream = args[2];
+                // default
+                colorStreamOn = true;
             }
 
             else
@@ -75,12 +77,12 @@ namespace Kinect_UDP_Sender
             sender = new UDP_Sender(ipAddress, port);
 
             KinectController kinect = new KinectController();
-            kinect.SetStreamType(stream);
+            kinect.EnableDataStreams(bodyStreamOn, colorStreamOn, depthStreamOn, infraredStreamOn);
 
             kinect.ColorFrameReady += KinectColorFrameReceived;
-            //kinect.BodyFrameReady += KinectBodyFrameReceived;
-            //kinect.DepthFrameReady += KinectDepthFrameReceived;
-            //kinect.InfraredFrameReady += KinectInfraredFrameReceived;
+            kinect.BodyFrameReady += KinectBodyFrameReceived;
+            kinect.DepthFrameReady += KinectDepthFrameReceived;
+            kinect.InfraredFrameReady += KinectInfraredFrameReceived;
 
             while (true)
             {
@@ -92,31 +94,30 @@ namespace Kinect_UDP_Sender
                     //Console.WriteLine("Stopping Client.");
                     break;
                 }
-
             }
         }
 
         static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
-            sender.sendMessage(c.ColorFrameData);
-            Console.WriteLine("What");// not printing
+            //Console.WriteLine(c.ColorFrameData[0]);
+            sender.SendMessage(c.ColorFrameData);
         }
 
         static void KinectBodyFrameReceived(object obj, BodyFrameReadyEventArgs f)
         {
             Console.WriteLine(f.BodyFrameData);
-            sender.sendMessage(f.BodyFrameData);
+            sender.SendMessage(f.BodyFrameData);
         }
 
 		static void KinectDepthFrameReceived(object obj, DepthFrameReadyEventArgs d)
 		{
 			Console.WriteLine(d.DepthFrameData);
-			sender.sendMessage(d.DepthFrameData);
+			sender.SendMessage(d.DepthFrameData);
 		}
         
         static void KinectInfraredFrameReceived(object obj, InfraredFrameReadyEventArgs i)
         {
-            sender.sendMessage(i.InfraredFrameData);
+            sender.SendMessage(i.InfraredFrameData);
         }
     }
 
