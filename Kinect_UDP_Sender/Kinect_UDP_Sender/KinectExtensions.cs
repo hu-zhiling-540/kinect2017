@@ -33,29 +33,29 @@ namespace Kinect_UDP_Sender
             // want to return the color image frame in BGRA format
             frame.CopyConvertedFrameDataToArray(pixels, ColorImageFormat.Bgra);
 
-            // create a bitmap to store the data
-            WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
-            outputImg.Lock();           // reserve the back buffer for updates
-                                        // write the pixel data into the bitmap
-            Marshal.Copy(pixels, 0, outputImg.BackBuffer, pixels.Length);
-            // specify the area of the bitmap that changed
-            outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
-            outputImg.Unlock();         //  release the back buffer to make it available for display.
-            BitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(outputImg as BitmapSource));
-            using (var stream = new FileStream("temp.jpg", FileMode.Create))
-            {
-                encoder.Save(stream);
-            }
-            using (FileStream stream = new FileStream("temp.jpg", FileMode.Open, FileAccess.Read))
-            {
-                using (BinaryReader reader = new BinaryReader(stream))
-                {
-                    return reader.ReadBytes((int)stream.Length);
-                }
-            }
+            //// create a bitmap to store the data
+            //WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
+            //outputImg.Lock();           // reserve the back buffer for updates
+            //                            // write the pixel data into the bitmap
+            //Marshal.Copy(pixels, 0, outputImg.BackBuffer, pixels.Length);
+            //// specify the area of the bitmap that changed
+            //outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
+            //outputImg.Unlock();         //  release the back buffer to make it available for display.
+            //BitmapEncoder encoder = new JpegBitmapEncoder();
+            //encoder.Frames.Add(BitmapFrame.Create(outputImg as BitmapSource));
+            //using (var stream = new FileStream("temp.jpg", FileMode.Create))
+            //{
+            //    encoder.Save(stream);
+            //}
+            //using (FileStream stream = new FileStream("temp.jpg", FileMode.Open, FileAccess.Read))
+            //{
+            //    using (BinaryReader reader = new BinaryReader(stream))
+            //    {
+            //        return reader.ReadBytes((int)stream.Length);
+            //    }
+            //}
 
-                //return pixels;
+            return pixels;
         }
 
         public static byte[] DepthFrameProcessor(this DepthFrame frame)

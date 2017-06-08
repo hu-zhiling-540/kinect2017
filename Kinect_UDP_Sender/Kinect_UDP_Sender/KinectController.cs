@@ -6,14 +6,6 @@ using System.Windows.Media;
 
 namespace Kinect_UDP_Sender
 {
-    public enum StreamType
-    {
-        Body,
-        Color,
-        Depth,
-        Infrared
-    }
-
     class KinectController
     {
         KinectSensor mySensor;
@@ -23,8 +15,7 @@ namespace Kinect_UDP_Sender
         //WriteableBitmap outputImg = null;
         //byte[] framePixels = null;
         List<Body> bdList = new List<Body>();
-
-        StreamType myStream = StreamType.Color;
+        FrameSourceTypes openStreams = FrameSourceTypes.None;
 
         public KinectController()
         {
@@ -42,15 +33,10 @@ namespace Kinect_UDP_Sender
             {
                 // open the sensor
                 mySensor.Open();
-                // open reader for frame source, specify which streams to be used
-                myReader = mySensor.OpenMultiSourceFrameReader(FrameSourceTypes.Body | FrameSourceTypes.Depth | FrameSourceTypes.Color | FrameSourceTypes.Infrared);
-                // register an event that fires each time a frame is ready
-                myReader.MultiSourceFrameArrived += MultiSouceFrameArrived;
             }
             else
                 throw new Exception("Unable to connect to Kinect sensor");
         }
-
 
         public void CloseKinect()
         {
@@ -66,24 +52,25 @@ namespace Kinect_UDP_Sender
                 mySensor = null;
             }
         }
-
-        public void SetStreamType(string streamName)
+        
+        /// <summary>
+        /// Read bools from Preference file, and enable any or all of the data streams
+        /// </summary>
+        public void EnableDataStreams(bool bodyOn, bool colorOn, bool depthOn, bool infraredOn)
         {
-            switch (streamName)
-            {
-                case "Color":
-                    myStream = StreamType.Color;
-                    break;
-                case "Depth":
-                    myStream = StreamType.Depth;
-                    break;
-                case "Infrared":
-                    myStream = StreamType.Infrared;
-                    break;
-                case "Body":
-                    myStream = StreamType.Body;
-                    break;
-            }
+            if(bodyOn)
+                openStreams |= FrameSourceTypes.Body;
+            if (colorOn)
+                openStreams |= FrameSourceTypes.Color;
+            if (depthOn)
+                openStreams |= FrameSourceTypes.Body;
+            if (infraredOn)
+                openStreams |= FrameSourceTypes.Infrared;
+            
+            // open reader for frame source, specify which streams to be used
+            myReader = mySensor.OpenMultiSourceFrameReader(openStreams);
+            // register an event that fires each time a frame is ready
+            myReader.MultiSourceFrameArrived += MultiSouceFrameArrived;
         }
 
         /// <summary>
@@ -100,7 +87,7 @@ namespace Kinect_UDP_Sender
             bdList.Clear();
 
             #region Body
-            if (myStream == StreamType.Body)
+            if ((openStreams | FrameSourceTypes.Body) != 0)
             {
                 // frame will be automatically disposed of when done using it
                 using (BodyFrame bdFrame = frame.BodyFrameReference.AcquireFrame())
@@ -129,8 +116,24 @@ namespace Kinect_UDP_Sender
             }
             #endregion  
 
+            #region Color
+            if ((openStreams | FrameSourceTypes.Color) != 0)
+            {
+                using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
+                {
+                    if (cFrame != null)
+                    {
+
+
+                        //Console.WriteLine("hi"); // did get called
+                        ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
+                    }
+                }
+            }
+            #endregion
+
             #region Depth
-            if (myStream == StreamType.Depth)
+            if ((openStreams | FrameSourceTypes.Depth) != 0)
             {
                 
                 using (DepthFrame dFrame = frame.DepthFrameReference.AcquireFrame())
@@ -142,21 +145,9 @@ namespace Kinect_UDP_Sender
                 }
             }
             #endregion  
-
-            #region Color
-            using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
-            {
-                if (cFrame != null && myStream == StreamType.Color)
-                {
-                    //Console.WriteLine("hi"); // did get called
-                    ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
-                }
-            }
             
-            #endregion
-
             #region Infrared
-            if (myStream == StreamType.Infrared)
+            if ((openStreams | FrameSourceTypes.Infrared) != 0)
             {
                 using (InfraredFrame iFrame = frame.InfraredFrameReference.AcquireFrame())
                 {
@@ -193,9 +184,7 @@ namespace Kinect_UDP_Sender
         }
         public ColorFrameReadyEventArgs(byte[] colorFramePixels)
         {
-            //Console.WriteLine(colorFramePixels[8]);// did get data
             this.ColorFrameData = colorFramePixels;
-            //Console.WriteLine(ColorFrameData[8]);// get same data
         }
     }
 
@@ -208,7 +197,6 @@ namespace Kinect_UDP_Sender
         }
         public BodyFrameReadyEventArgs(List<Body> bdList)
         {
-            // convert it to string
             this.BodyFrameData = JsonConvert.SerializeObject(bdList);
         }
     }
