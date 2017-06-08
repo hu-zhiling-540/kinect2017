@@ -3,9 +3,10 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -20,19 +21,22 @@ import java.util.concurrent.TimeUnit;
 public class Receiver implements Runnable {
 
     // unbounded
-    BlockingQueue<byte[]> receivedMsgs = new ArrayBlockingQueue<byte[]>(100);
+    ArrayBlockingQueue<byte[]> receivedMsgs = new ArrayBlockingQueue<byte[]>(100);
 
     private DatagramSocket mySocket;
-    private int myPort;
+//    private int myPort;
 
     private boolean isRunning = true;
 
-    public int timeOut = 5000;
+    private int timeOut = 5000;
+
+    public static final int WIDTH = 1920;
+    public static final int HEIGHT = 1080;
 
     public Receiver(int port) {
-        myPort = port;
+
         try {
-            mySocket = new DatagramSocket(myPort);
+            mySocket = new DatagramSocket(port);
             mySocket.setSoTimeout(timeOut);        // wait for 0.5 second for data
         } catch (SocketException e) {
             e.printStackTrace();
@@ -43,23 +47,39 @@ public class Receiver implements Runnable {
     public void run() {
         DatagramPacket packet;
         while (isRunning) {
-            // buffer is filled with the data received
+            /* buffer is filled with the data received */
             try {
                 InetAddress address = InetAddress.getByName("127.0.0.1");
-                byte[] msg = new byte[1024];
-//                packet = new DatagramPacket(msg, msg.length, address, myPort);
+                byte[] msg = new byte[WIDTH*HEIGHT*4];
                 packet = new DatagramPacket(msg, msg.length);
-                mySocket.receive(packet);    // blocks until it receives a datagram
+                /* blocks until it receives a datagram */
+                mySocket.receive(packet);
                 receivedMsgs.offer(msg, timeOut, TimeUnit.MILLISECONDS);
+
+                if (packet == null)
+                    System.out.println("jho");
+                SaveAsColorIMG(packet.getData());
+
                 System.out.println(new String(msg));
             } catch (IOException ioe) {
                 ioe.printStackTrace();
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
 
+    private void SaveAsColorIMG(byte[] imageBytes) throws IOException {
+
+//        BufferedImage img = new BufferedImage(WIDTH,HEIGHT BufferedImage.TYPE_INT_ARGB);
+        System.out.println("hi");
+        InputStream in = new ByteArrayInputStream(imageBytes);
+        BufferedImage img = ImageIO.read(in);
+        if (img == null)
+            System.out.println("jho");
+
+        ImageIO.write(img, "jpg", new File("C:\\Users\\durian_milk\\Pictures\\hi.jpg"));
+    }
     /**
      * Stops the thread that is running and shut down
      */
@@ -89,11 +109,7 @@ public class Receiver implements Runnable {
             port =  Integer.parseInt((String) jsonObject.get("port"));
 //                ipAddress = (String)jsonObject.get("ip address");
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
 

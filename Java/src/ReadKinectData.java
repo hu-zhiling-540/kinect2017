@@ -8,8 +8,7 @@ public class ReadKinectData {
 
     private void readJsonStrData(String dataList ) {
 
-        Object obj = dataList;
-        JSONObject jsonObj = (JSONObject) obj;
+        JSONObject jsonObj = (JSONObject) (Object) dataList;
 
         JSONArray bodies = (JSONArray) jsonObj.get("bodies");
 
