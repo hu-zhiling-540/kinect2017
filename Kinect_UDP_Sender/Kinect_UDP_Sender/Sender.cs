@@ -1,8 +1,6 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 
 namespace Kinect_UDP_Sender
 {
@@ -18,12 +16,10 @@ namespace Kinect_UDP_Sender
 		/// <summary>
 		/// Obtains the IP address, and port number of the endpoin
 		/// </summary>
-		/// <param name="ip_address">Ip address.</param>
-		/// <param name="port">Port.</param>
-		public UDP_Sender(string ip_address, int port)
+		public UDP_Sender(string hostName, int portNum)
         {
-            remoteIP = IPAddress.Parse(ip_address);
-            remoteIPEP = new IPEndPoint(remoteIP, port);
+            remoteIP = IPAddress.Parse(hostName);
+            remoteIPEP = new IPEndPoint(remoteIP, portNum);
             mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         }
 
@@ -31,7 +27,7 @@ namespace Kinect_UDP_Sender
 		///<summary>
 		///Sends messages of type Byte
 		///</summary>
-		public void sendMessage(byte[] msg)
+		public void SendMessage(byte[] msg)
 		{
 			mySocket.SendTo(msg, remoteIPEP);
 		}
@@ -39,7 +35,7 @@ namespace Kinect_UDP_Sender
 		///<summary>
 		///Sends messages of type string
 		///</summary>
-		public void sendMessage(string msg)
+		public void SendMessage(string msg)
         {
             mySocket.SendTo(Encoding.ASCII.GetBytes(msg), remoteIPEP);
         }
