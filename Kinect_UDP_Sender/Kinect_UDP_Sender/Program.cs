@@ -90,7 +90,6 @@ namespace Kinect_UDP_Sender
                 if (Console.ReadKey().Key == ConsoleKey.Enter)
                 {
                     kinect.CloseKinect();
-                    //kinect.BodyFrameReceived -= KinectBodyFrameReceived;
                     //Console.WriteLine("Stopping Client.");
                     break;
                 }
