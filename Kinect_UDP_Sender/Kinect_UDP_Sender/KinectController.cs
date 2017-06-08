@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Kinect;
 using Newtonsoft.Json;
+using System.Windows.Media;
 
 namespace Kinect_UDP_Sender
 {
@@ -95,48 +96,52 @@ namespace Kinect_UDP_Sender
         private void MultiSouceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             var frame = e.FrameReference.AcquireFrame();
+
             bdList.Clear();
 
             #region Body
-            // frame will be automatically disposed of when done using it
-            using (BodyFrame bdFrame = frame.BodyFrameReference.AcquireFrame())
+            if (myStream == StreamType.Body)
             {
-                if (bdFrame != null && myStream == StreamType.Body)
+                // frame will be automatically disposed of when done using it
+                using (BodyFrame bdFrame = frame.BodyFrameReference.AcquireFrame())
                 {
-                    bodies = new Body[bdFrame.BodyFrameSource.BodyCount];
-                    bdFrame.GetAndRefreshBodyData(bodies);
-
-                    // bodies = new Body[mySensor.BodyFrameSource.BodyCount];
-                    foreach (Body body in bodies)
+                    if (bdFrame != null)
                     {
-                        if (body.IsTracked)
+                        bodies = new Body[bdFrame.BodyFrameSource.BodyCount];
+                        bdFrame.GetAndRefreshBodyData(bodies);
+                        
+                        foreach (Body body in bodies)
                         {
-                            Console.WriteLine("Object detected!");
-                            bdList.Add(body);
+                            if (body.IsTracked)
+                            {
+                                Console.WriteLine("Object detected!");
+                                bdList.Add(body);
+                            }
                         }
-                    }
 
-                    // if at least one body is tracked
-                    if (bdList.Capacity != 0)
-                    {
-                        //// convert it to string
-                        //string bodyList = JsonConvert.SerializeObject(bdList);
-                        BodyFrameReady(this, new BodyFrameReadyEventArgs(bdList));
+                        // if at least one body is tracked
+                        if (bdList.Capacity != 0)
+                        {
+                            BodyFrameReady(this, new BodyFrameReadyEventArgs(bdList));
+                        }
                     }
                 }
             }
             #endregion  
 
             #region Depth
-            using (DepthFrame dFrame = frame.DepthFrameReference.AcquireFrame())
+            if (myStream == StreamType.Depth)
             {
-                if (dFrame != null && myStream == StreamType.Depth)
+                
+                using (DepthFrame dFrame = frame.DepthFrameReference.AcquireFrame())
                 {
-                    DepthFrameReady(this, new DepthFrameReadyEventArgs(dFrame.DepthFrameProcessor()));
+                    if (dFrame != null)
+                    {
+                        DepthFrameReady(this, new DepthFrameReadyEventArgs(dFrame.DepthFrameProcessor()));
+                    }
                 }
             }
             #endregion  
-
 
             #region Color
             using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
@@ -146,14 +151,18 @@ namespace Kinect_UDP_Sender
                     ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
                 }
             }
+            
             #endregion
 
             #region Infrared
-            using (InfraredFrame iFrame = frame.InfraredFrameReference.AcquireFrame())
+            if (myStream == StreamType.Infrared)
             {
-                if (iFrame != null && myStream == StreamType.Infrared)
+                using (InfraredFrame iFrame = frame.InfraredFrameReference.AcquireFrame())
                 {
-                    InfraredFrameReady(this, new InfraredFrameReadyEventArgs(iFrame.InfraredFrameProcessor()));
+                    if (iFrame != null)
+                    {
+                        InfraredFrameReady(this, new InfraredFrameReadyEventArgs(iFrame.InfraredFrameProcessor()));
+                    }
                 }
             }
             #endregion
@@ -172,7 +181,8 @@ namespace Kinect_UDP_Sender
 
         // event that fires when a new infrared frame is available
         public event EventHandler<InfraredFrameReadyEventArgs> InfraredFrameReady;
-        
+
+
     }
 
 

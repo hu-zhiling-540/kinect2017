@@ -1,6 +1,7 @@
 ﻿using Microsoft.Kinect;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -19,24 +20,42 @@ namespace Kinect_UDP_Sender
 		/// </summary>
 		public static byte[] ColorFrameProcessor(this ColorFrame frame)
         {
+            //Console.WriteLine(frame.RawColorImageFormat); return Yuy2 - 2 bytes per pixel
+            // should be 4 bytes store the data from one pixel
+            int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel/8;
+
             FrameDescription fd = frame.FrameDescription;
-            // create a bitmap to store the data
-            WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
+            
             // store the pixel data and then allocate the memory array
-            //  4 bytes will store the data from one pixel
-            byte[] pixels = new byte[fd.Width * fd.Height * 4];
-            // get the data
-            // color image frame is in BGRA format; BGRA has 4 bytes of data per pixel
+            byte[] pixels = new byte[fd.Width * fd.Height * bytesPerPixel];
+            //byte[] pixels = new byte[fd.LengthInPixels];
+
+            // want to return the color image frame in BGRA format
             frame.CopyConvertedFrameDataToArray(pixels, ColorImageFormat.Bgra);
 
+            // create a bitmap to store the data
+            WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
             outputImg.Lock();           // reserve the back buffer for updates
                                         // write the pixel data into the bitmap
             Marshal.Copy(pixels, 0, outputImg.BackBuffer, pixels.Length);
             // specify the area of the bitmap that changed
             outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
             outputImg.Unlock();         //  release the back buffer to make it available for display.
+            BitmapEncoder encoder = new JpegBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(outputImg as BitmapSource));
+            using (var stream = new FileStream("temp.jpg", FileMode.Create))
+            {
+                encoder.Save(stream);
+            }
+            using (FileStream stream = new FileStream("temp.jpg", FileMode.Open, FileAccess.Read))
+            {
+                using (BinaryReader reader = new BinaryReader(stream))
+                {
+                    return reader.ReadBytes((int)stream.Length);
+                }
+            }
 
-            return pixels;
+                //return pixels;
         }
 
         public static byte[] DepthFrameProcessor(this DepthFrame frame)

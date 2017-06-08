@@ -51,7 +51,7 @@ namespace Kinect_UDP_Sender
                 port = pref["port"].AsInt;                 // versionString will be a int containing "8008"
                 ipAddress = pref["ip address"].Value;      // will be a string containing "127.0.0.1"
                 stream = pref["stream"].Value;
-                Console.WriteLine(stream);
+                Console.WriteLine("reading value in: " + stream);
             }
 
             else if (args.Length == 2)
@@ -71,14 +71,14 @@ namespace Kinect_UDP_Sender
             else
                 Console.WriteLine("Invalid arguments");
 
+
             sender = new UDP_Sender(ipAddress, port);
 
             KinectController kinect = new KinectController();
             kinect.SetStreamType(stream);
-            
 
-            kinect.BodyFrameReady += KinectBodyFrameReceived;
             kinect.ColorFrameReady += KinectColorFrameReceived;
+            kinect.BodyFrameReady += KinectBodyFrameReceived;
             kinect.DepthFrameReady += KinectDepthFrameReceived;
             kinect.InfraredFrameReady += KinectInfraredFrameReceived;
 
@@ -99,6 +99,7 @@ namespace Kinect_UDP_Sender
         static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
             sender.sendMessage(c.ColorFrameData);
+            Console.WriteLine(Encoding.UTF8.GetString(c.ColorFrameData));
         }
 
         static void KinectBodyFrameReceived(object obj, BodyFrameReadyEventArgs f)
