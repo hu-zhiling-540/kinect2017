@@ -58,7 +58,7 @@ namespace Kinect_UDP_Sender
             {
                 port = Int32.Parse(args[0]);
                 ipAddress = args[1];
-                stream = "Body";
+                stream = "Color";
             }
 
             else if (args.Length == 3)
@@ -78,9 +78,9 @@ namespace Kinect_UDP_Sender
             kinect.SetStreamType(stream);
 
             kinect.ColorFrameReady += KinectColorFrameReceived;
-            kinect.BodyFrameReady += KinectBodyFrameReceived;
-            kinect.DepthFrameReady += KinectDepthFrameReceived;
-            kinect.InfraredFrameReady += KinectInfraredFrameReceived;
+            //kinect.BodyFrameReady += KinectBodyFrameReceived;
+            //kinect.DepthFrameReady += KinectDepthFrameReceived;
+            //kinect.InfraredFrameReady += KinectInfraredFrameReceived;
 
             while (true)
             {
@@ -99,7 +99,7 @@ namespace Kinect_UDP_Sender
         static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
             sender.sendMessage(c.ColorFrameData);
-            Console.WriteLine(Encoding.UTF8.GetString(c.ColorFrameData));
+            Console.WriteLine("What");// not printing
         }
 
         static void KinectBodyFrameReceived(object obj, BodyFrameReadyEventArgs f)

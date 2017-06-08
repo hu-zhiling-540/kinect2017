@@ -148,6 +148,7 @@ namespace Kinect_UDP_Sender
             {
                 if (cFrame != null && myStream == StreamType.Color)
                 {
+                    //Console.WriteLine("hi"); // did get called
                     ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
                 }
             }
@@ -169,12 +170,11 @@ namespace Kinect_UDP_Sender
         }
 
 
+        // event that fires when a new color frame is available
+        public event EventHandler<ColorFrameReadyEventArgs> ColorFrameReady;
 
         // event that fires when a new body frame is available
         public event EventHandler<BodyFrameReadyEventArgs> BodyFrameReady;
-
-        // event that fires when a new color frame is available
-        public event EventHandler<ColorFrameReadyEventArgs> ColorFrameReady;
 
         // event that fires when a new depth frame is available
         public event EventHandler<DepthFrameReadyEventArgs> DepthFrameReady;
@@ -182,11 +182,23 @@ namespace Kinect_UDP_Sender
         // event that fires when a new infrared frame is available
         public event EventHandler<InfraredFrameReadyEventArgs> InfraredFrameReady;
 
-
     }
 
+    public class ColorFrameReadyEventArgs : EventArgs
+    {
+        public byte[] ColorFrameData
+        {
+            get;
+            set;
+        }
+        public ColorFrameReadyEventArgs(byte[] colorFramePixels)
+        {
+            //Console.WriteLine(colorFramePixels[8]);// did get data
+            this.ColorFrameData = colorFramePixels;
+            //Console.WriteLine(ColorFrameData[8]);// get same data
+        }
+    }
 
-    
     public class BodyFrameReadyEventArgs : EventArgs
     {
         public string BodyFrameData
@@ -201,18 +213,7 @@ namespace Kinect_UDP_Sender
         }
     }
 
-    public class ColorFrameReadyEventArgs : EventArgs
-    {
-        public byte[] ColorFrameData
-        {
-            get;
-            set;
-        }
-        public ColorFrameReadyEventArgs(byte[] colorFramePixels)
-        {
-            this.ColorFrameData = colorFramePixels;
-        }
-    }
+    
 
     public class DepthFrameReadyEventArgs : EventArgs
     {
