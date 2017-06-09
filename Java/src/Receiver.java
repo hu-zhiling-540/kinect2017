@@ -52,12 +52,12 @@ public class Receiver implements Runnable {
             /* buffer is filled with the data received */
             try {
                 InetAddress address = InetAddress.getByName("127.0.0.1");
-                byte[] msg = new byte[8294400];
+                byte[] msg = new byte[1920*1080];
                 packet = new DatagramPacket(msg, msg.length);
                 /* blocks until it receives a datagram */
                 mySocket.receive(packet);
                 receivedMsgs.offer(msg, timeOut, TimeUnit.MILLISECONDS);
-                System.out.println(new String(msg));
+                System.out.println(packet.toString());
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             } catch (InterruptedException e) {

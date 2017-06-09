@@ -22,16 +22,18 @@ namespace Kinect_UDP_Sender
         {
             //Console.WriteLine(frame.RawColorImageFormat); return Yuy2 - 2 bytes per pixel
             // should be 4 bytes store the data from one pixel
-            int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel/8;
+            //int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel/8;
 
             FrameDescription fd = frame.FrameDescription;
             
             // store the pixel data and then allocate the memory array
-            byte[] pixels = new byte[fd.Width * fd.Height * bytesPerPixel];
+            byte[] pixels = new byte[fd.Width * fd.Height];
+            //Console.WriteLine("size:" + pixels.Length);
             //byte[] pixels = new byte[fd.LengthInPixels];
 
             // want to return the color image frame in BGRA format
-            frame.CopyConvertedFrameDataToArray(pixels, ColorImageFormat.Bgra);
+            //frame.CopyConvertedFrameDataToArray(pixels, ColorImageFormat.Bgra);
+            frame.CopyRawFrameDataToArray(pixels);
 
             //// create a bitmap to store the data
             //WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);

@@ -98,7 +98,7 @@ namespace Kinect_UDP_Sender
 
         static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
-            //Console.WriteLine(c.ColorFrameData[0]);
+            Console.WriteLine(c.ColorFrameData[1]);
             sender.SendMessage(c.ColorFrameData);
         }
 

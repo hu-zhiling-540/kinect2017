@@ -4,6 +4,8 @@ using Microsoft.Kinect;
 using Newtonsoft.Json;
 using System.Windows.Media;
 using System.Runtime.InteropServices;
+using System.Drawing;
+using System.Windows.Media.Imaging;
 
 namespace Kinect_UDP_Sender
 {
@@ -127,7 +129,17 @@ namespace Kinect_UDP_Sender
                 {
                     if (cFrame != null)
                     {
-                        //Console.WriteLine("hi"); // did get called
+                        //FrameDescription fd = cFrame.FrameDescription;
+                        //int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel / 8;
+
+                        //var size = fd.Width * fd.Height * bytesPerPixel;
+                        ////Console.WriteLine(fd.BytesPerPixel);
+                        //Console.WriteLine(size);//434,176
+
+                        //var storage = new byte[size + sizeof(long)];
+                        //WriteableBitmap bit = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
+
+
                         ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
                     }
                 }
@@ -142,14 +154,11 @@ namespace Kinect_UDP_Sender
                     if (dFrame != null)
                     {
                         FrameDescription fd = dFrame.FrameDescription;
-                        FrameDescription fsfd = dFrame.DepthFrameSource.FrameDescription;
-                        
-                        var size2 = fsfd.Width * fsfd.Height * fsfd.BytesPerPixel;
                         var size = fd.Width * fd.Height * fd.BytesPerPixel;
+                        Console.WriteLine(fd.BytesPerPixel);
+                        //Console.WriteLine(size);//434,176
 
-                        Console.WriteLine(size);//434176
-                        Console.WriteLine(size2);
-
+                        // sizeof(long) = 8
                         var storage = new byte[size + sizeof(long)];
                         
                         // access to the underlying buffer used by the system to store this frame's data
@@ -203,6 +212,7 @@ namespace Kinect_UDP_Sender
         }
         public ColorFrameReadyEventArgs(byte[] colorFramePixels)
         {
+            Console.WriteLine(colorFramePixels.Length);
             this.ColorFrameData = colorFramePixels;
         }
     }
