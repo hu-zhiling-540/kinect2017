@@ -110,7 +110,7 @@ namespace Kinect_UDP_Sender
 
 		static void KinectDepthFrameReceived(object obj, DepthFrameReadyEventArgs d)
 		{
-			Console.WriteLine(d.DepthFrameData);
+			//Console.WriteLine(d.DepthFrameData[25]);
 			sender.SendMessage(d.DepthFrameData);
 		}
         

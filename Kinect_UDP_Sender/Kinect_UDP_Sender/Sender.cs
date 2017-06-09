@@ -13,10 +13,10 @@ namespace Kinect_UDP_Sender
         Socket mySocket = null;
 
 
-		/// <summary>
-		/// Obtains the IP address, and port number of the endpoin
-		/// </summary>
-		public UDP_Sender(string hostName, int portNum)
+        /// <summary>
+        /// Obtains the IP address, and port number of the endpoin
+        /// </summary>
+        public UDP_Sender(string hostName, int portNum)
         {
             remoteIP = IPAddress.Parse(hostName);
             remoteIPEP = new IPEndPoint(remoteIP, portNum);
@@ -24,22 +24,22 @@ namespace Kinect_UDP_Sender
         }
 
 
-		///<summary>
-		///Sends messages of type Byte
-		///</summary>
-		public void SendMessage(byte[] msg)
-		{
-			mySocket.SendTo(msg, remoteIPEP);
-		}
+        ///<summary>
+        ///Sends messages of type Byte
+        ///</summary>
+        public void SendMessage(byte[] msg)
+        {
+            mySocket.SendTo(msg, remoteIPEP);
+        }
 
-		///<summary>
-		///Sends messages of type string
-		///</summary>
-		public void SendMessage(string msg)
+        ///<summary>
+        ///Sends messages of type string
+        ///</summary>
+        public void SendMessage(string msg)
         {
             mySocket.SendTo(Encoding.ASCII.GetBytes(msg), remoteIPEP);
         }
 
 
-	}
+    }
 }

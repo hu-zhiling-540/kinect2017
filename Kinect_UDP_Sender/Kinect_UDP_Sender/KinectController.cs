@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Kinect;
 using Newtonsoft.Json;
 using System.Windows.Media;
+using System.Runtime.InteropServices;
 
 namespace Kinect_UDP_Sender
 {
@@ -63,7 +64,7 @@ namespace Kinect_UDP_Sender
             if (colorOn)
                 openStreams |= FrameSourceTypes.Color;
             if (depthOn)
-                openStreams |= FrameSourceTypes.Body;
+                openStreams |= FrameSourceTypes.Depth;
             if (infraredOn)
                 openStreams |= FrameSourceTypes.Infrared;
             
@@ -83,6 +84,9 @@ namespace Kinect_UDP_Sender
         private void MultiSouceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             var frame = e.FrameReference.AcquireFrame();
+            // millisecond component of the time represented by current time in local computer
+            long timeInMillisec = DateTimeOffset.Now.Millisecond;
+            byte[] timeStamp = BitConverter.GetBytes(timeInMillisec);
 
             bdList.Clear();
 
@@ -123,8 +127,6 @@ namespace Kinect_UDP_Sender
                 {
                     if (cFrame != null)
                     {
-
-
                         //Console.WriteLine("hi"); // did get called
                         ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
                     }
@@ -135,12 +137,29 @@ namespace Kinect_UDP_Sender
             #region Depth
             if ((openStreams | FrameSourceTypes.Depth) != 0)
             {
-                
                 using (DepthFrame dFrame = frame.DepthFrameReference.AcquireFrame())
                 {
                     if (dFrame != null)
                     {
-                        DepthFrameReady(this, new DepthFrameReadyEventArgs(dFrame.DepthFrameProcessor()));
+                        FrameDescription fd = dFrame.FrameDescription;
+                        FrameDescription fsfd = dFrame.DepthFrameSource.FrameDescription;
+                        
+                        var size2 = fsfd.Width * fsfd.Height * fsfd.BytesPerPixel;
+                        var size = fd.Width * fd.Height * fd.BytesPerPixel;
+
+                        Console.WriteLine(size);//434176
+                        Console.WriteLine(size2);
+
+                        var storage = new byte[size + sizeof(long)];
+                        
+                        // access to the underlying buffer used by the system to store this frame's data
+                        using (var depthFrameBuffer = dFrame.LockImageBuffer())
+                        {
+                            Marshal.Copy(depthFrameBuffer.UnderlyingBuffer, storage, 0, (int)depthFrameBuffer.Size);
+                        }
+                        Buffer.BlockCopy(timeStamp, 0, storage, (int)(size), sizeof(long));
+
+                        DepthFrameReady(this, new DepthFrameReadyEventArgs(storage));
                     }
                 }
             }

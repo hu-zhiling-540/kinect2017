@@ -2,7 +2,7 @@
 	"port number": "8008",
   "host name": "127.0.0.1",
   "Body Stream On": "false",
-  "Color Stream On": "true",
-  "Depth Stream On": "false",
+  "Color Stream On": "false",
+  "Depth Stream On": "true",
   "Infrared Stream On": "false"
 }

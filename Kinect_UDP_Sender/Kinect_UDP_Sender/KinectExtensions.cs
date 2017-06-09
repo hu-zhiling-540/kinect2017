@@ -58,46 +58,18 @@ namespace Kinect_UDP_Sender
             return pixels;
         }
 
-        public static byte[] DepthFrameProcessor(this DepthFrame frame)
+        public static byte[] DepthFrameProcessor(this DepthFrame frame, long timeStamp)
         {
             FrameDescription fd = frame.FrameDescription;
+            var depthBuffer = new byte[fd.Width * fd.Height * fd.BytesPerPixel + sizeof(long)];
 
-            ushort[] tempData = new ushort[fd.Width * fd.Height];
-            // * bytes per pixel
-            byte[] convertedPixels = new byte[fd.Width * fd.Height * 4];
-            // use the WriteableBitmap to display the mapped depth data.
-            WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
-
-            frame.CopyFrameDataToArray(tempData);
-
-            // Get the min and max reliable depth for the current frame, in millimeters
-            int minDepth = frame.DepthMinReliableDistance;
-            int maxDepth = frame.DepthMaxReliableDistance;
-
-            for (int i = 0; i < tempData.Length; i++)
+            using (var depthFrameBuffer = frame.LockImageBuffer())
             {
-                ushort depth = tempData[i];
-                byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
-                // Write out blue byte
-                convertedPixels[i++] = intensity;
-
-                // Write out green byte
-                convertedPixels[i++] = intensity;
-
-                // Write out red byte                        
-                convertedPixels[i++] = intensity;
-
-                // If we were outputting BGRA, we would write alpha here.
-                convertedPixels[i++] = 255;
+                Marshal.Copy(depthFrameBuffer.UnderlyingBuffer, depthBuffer, 0, (int)depthFrameBuffer.Size);
             }
+            Buffer.BlockCopy(BitConverter.GetBytes(timeStamp), 0, depthBuffer, (int)(fd.Width * fd.Height * fd.BytesPerPixel), sizeof(long));
 
-            int stride = fd.Width * PixelFormats.Bgr32.BitsPerPixel / 8;
-            // Use the WriteableBitmap.WritePixels method to save the pixel data
-            outputImg.WritePixels(new Int32Rect(0, 0, fd.Width, fd.Height),
-                                  convertedPixels, outputImg.PixelWidth * sizeof(int),
-                                  0);
-
-            return convertedPixels;
+            return depthBuffer;
         }
 
         public static byte[] InfraredFrameProcessor(this InfraredFrame frame)
