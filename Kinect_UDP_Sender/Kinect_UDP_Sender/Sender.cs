@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System;
 
 namespace Kinect_UDP_Sender
 {
@@ -11,6 +12,8 @@ namespace Kinect_UDP_Sender
         IPAddress remoteIP = null;
         IPEndPoint remoteIPEP = null;
         Socket mySocket = null;
+
+        int upperLimit = 10000;
 
 
         /// <summary>
@@ -29,7 +32,16 @@ namespace Kinect_UDP_Sender
         ///</summary>
         public void SendMessage(byte[] msg)
         {
-            mySocket.SendTo(msg, remoteIPEP);
+            var maxData = new byte[upperLimit];
+            int remaining = msg.Length;
+            while(remaining > 0)
+            {
+                int size = Math.Min(remaining, upperLimit);
+                Array.Copy(msg, msg.Length - remaining, maxData, 0, upperLimit);
+                mySocket.SendTo(maxData, remoteIPEP);
+                remaining -= size;
+            }
+
         }
 
         ///<summary>
@@ -37,7 +49,8 @@ namespace Kinect_UDP_Sender
         ///</summary>
         public void SendMessage(string msg)
         {
-            mySocket.SendTo(Encoding.ASCII.GetBytes(msg), remoteIPEP);
+            SendMessage(Encoding.ASCII.GetBytes(msg));
+            //mySocket.SendTo(Encoding.ASCII.GetBytes(msg), remoteIPEP);
         }
 
 

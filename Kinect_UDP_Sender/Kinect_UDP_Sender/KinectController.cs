@@ -130,7 +130,6 @@ namespace Kinect_UDP_Sender
             #region Color
             if ((openStreams | FrameSourceTypes.Color) != 0)
             {
-
                 using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
                 {
                     if (cFrame != null)
