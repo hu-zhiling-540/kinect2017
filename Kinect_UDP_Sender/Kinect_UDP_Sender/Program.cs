@@ -104,7 +104,7 @@ namespace Kinect_UDP_Sender
 
         static void KinectBodyFrameReceived(object obj, BodyFrameReadyEventArgs f)
         {
-            Console.WriteLine(f.BodyFrameData);
+            Console.WriteLine(f.BodyFrameData.Length);
             sender.SendMessage(f.BodyFrameData);
         }
 

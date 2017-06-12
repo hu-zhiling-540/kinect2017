@@ -57,11 +57,9 @@ public class Receiver implements Runnable {
                 /* blocks until it receives a datagram */
                 mySocket.receive(packet);
                 receivedMsgs.offer(msg, timeOut, TimeUnit.MILLISECONDS);
-                System.out.println(packet.toString());
-            } catch (IOException ioe) {
+                System.out.println(new String(packet.getData()));
+            } catch (IOException | InterruptedException ioe) {
                 ioe.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
     }

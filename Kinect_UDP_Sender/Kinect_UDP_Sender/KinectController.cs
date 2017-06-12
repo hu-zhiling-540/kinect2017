@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Windows.Media.Imaging;
+using System.Windows;
 
 namespace Kinect_UDP_Sender
 {
@@ -19,7 +20,8 @@ namespace Kinect_UDP_Sender
         //byte[] framePixels = null;
         List<Body> bdList = new List<Body>();
         FrameSourceTypes openStreams = FrameSourceTypes.None;
-
+       
+        WriteableBitmap bitmap;
         public KinectController()
         {
             OpenKinect();
@@ -36,6 +38,8 @@ namespace Kinect_UDP_Sender
             {
                 // open the sensor
                 mySensor.Open();
+                
+
             }
             else
                 throw new Exception("Unable to connect to Kinect sensor");
@@ -74,6 +78,7 @@ namespace Kinect_UDP_Sender
             myReader = mySensor.OpenMultiSourceFrameReader(openStreams);
             // register an event that fires each time a frame is ready
             myReader.MultiSourceFrameArrived += MultiSouceFrameArrived;
+
         }
 
         /// <summary>
@@ -125,20 +130,23 @@ namespace Kinect_UDP_Sender
             #region Color
             if ((openStreams | FrameSourceTypes.Color) != 0)
             {
+
                 using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
                 {
                     if (cFrame != null)
                     {
-                        //FrameDescription fd = cFrame.FrameDescription;
-                        //int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel / 8;
-
-                        //var size = fd.Width * fd.Height * bytesPerPixel;
+                        FrameDescription fd = cFrame.FrameDescription;
+                        int bytesPerPixel = (PixelFormats.Bgra32.BitsPerPixel + 7)/ 8;
+                        byte[] data = new byte[bytesPerPixel * fd.Width * fd.Height];
+                        cFrame.CopyConvertedFrameDataToArray(data, ColorImageFormat.Bgra);
+                        int stride = fd.Width * PixelFormats.Bgra32.BitsPerPixel / 8;
                         ////Console.WriteLine(fd.BytesPerPixel);
                         //Console.WriteLine(size);//434,176
 
                         //var storage = new byte[size + sizeof(long)];
-                        //WriteableBitmap bit = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
-
+                        BitmapSource bitmap = BitmapSource.Create(fd.Width, fd.Height, 96, 96, PixelFormats.Bgra32, null, data, stride);
+                        ScaleTransform scale = new ScaleTransform((640.0 / bitmap.PixelWidth), (480.0 / bitmap.PixelHeight));
+                        TransformedBitmap tbBitmap = new TransformedBitmap(bitmap, scale);
 
                         ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
                     }
@@ -155,20 +163,19 @@ namespace Kinect_UDP_Sender
                     {
                         FrameDescription fd = dFrame.FrameDescription;
                         var size = fd.Width * fd.Height * fd.BytesPerPixel;
-                        Console.WriteLine(fd.BytesPerPixel);
-                        //Console.WriteLine(size);//434,176
+                        // 512 * 424 * 2 = 434,176
 
                         // sizeof(long) = 8
-                        var storage = new byte[size + sizeof(long)];
+                        var buffer = new byte[size + sizeof(long)];
                         
                         // access to the underlying buffer used by the system to store this frame's data
-                        using (var depthFrameBuffer = dFrame.LockImageBuffer())
+                        using (var dFrameBuffer = dFrame.LockImageBuffer())
                         {
-                            Marshal.Copy(depthFrameBuffer.UnderlyingBuffer, storage, 0, (int)depthFrameBuffer.Size);
+                            Marshal.Copy(dFrameBuffer.UnderlyingBuffer, buffer, 0, (int)dFrameBuffer.Size);
                         }
-                        Buffer.BlockCopy(timeStamp, 0, storage, (int)(size), sizeof(long));
+                        Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
 
-                        DepthFrameReady(this, new DepthFrameReadyEventArgs(storage));
+                        DepthFrameReady(this, new DepthFrameReadyEventArgs(buffer));
                     }
                 }
             }
@@ -181,7 +188,23 @@ namespace Kinect_UDP_Sender
                 {
                     if (iFrame != null)
                     {
-                        InfraredFrameReady(this, new InfraredFrameReadyEventArgs(iFrame.InfraredFrameProcessor()));
+                        FrameDescription fd = iFrame.FrameDescription;
+                        var size = fd.Width * fd.Height * fd.BytesPerPixel;
+
+                        Console.WriteLine(fd.BytesPerPixel);
+                        //Console.WriteLine(size);//434,176
+
+                        // sizeof(long) = 8
+                        var buffer = new byte[size + sizeof(long)];
+
+                        // access to the underlying buffer used by the system to store this frame's data
+                        using (var iFrameBuffer = iFrame.LockImageBuffer())
+                        {
+                            Marshal.Copy(iFrameBuffer.UnderlyingBuffer, buffer, 0, (int)iFrameBuffer.Size);
+                        }
+                        Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
+
+                        InfraredFrameReady(this, new InfraredFrameReadyEventArgs(buffer));
                     }
                 }
             }
