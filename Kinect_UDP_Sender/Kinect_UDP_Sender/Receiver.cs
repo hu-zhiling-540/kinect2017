@@ -1,11 +1,8 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace Kinect_UDP_Sender
 {
@@ -45,16 +42,16 @@ namespace Kinect_UDP_Sender
         /// <summary>
         /// Starts the thread for Receiver.
         /// </summary>
-        public void start()
+        public void Start()
         {
-            Thread newThread = new Thread(new ThreadStart(this.onReceive));
+            Thread newThread = new Thread(new ThreadStart(this.OnReceive));
             newThread.Start();
         }
 
         /// <summary>
         /// Stops the thread for Receiver
         /// </summary>
-        public void stop()
+        public void Stop()
         {
             isRunning = false;
             mySocket.Dispose();     //finished using the Socket
@@ -64,7 +61,7 @@ namespace Kinect_UDP_Sender
         /// Gets the message queue.
         /// </summary>
         /// <returns>The message queue.</returns>
-        public BlockingCollection<string> getMsgQueue()
+        public BlockingCollection<string> GetMsgQueue()
         {
             return receivedMsgs;
         }
@@ -73,7 +70,7 @@ namespace Kinect_UDP_Sender
         /// When the Receiver is on, keep accepting message 
         /// and store them in the queue 
         /// </summary>
-        public void onReceive()
+        public void OnReceive()
         {
             // not specify the ip address of the devices sending me the packets
             IPEndPoint sender = new IPEndPoint(IPAddress.Any, 0);

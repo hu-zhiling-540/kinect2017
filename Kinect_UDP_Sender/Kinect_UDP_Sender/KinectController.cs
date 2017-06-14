@@ -3,17 +3,11 @@ using System.Collections.Generic;
 using Microsoft.Kinect;
 using Newtonsoft.Json;
 using System.Windows.Media;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Kinect_UDP_Sender
 {
-    public enum StreamType
-    {
-        Body,
-        Color,
-        Depth,
-        Infrared
-    }
-
     class KinectController
     {
         KinectSensor mySensor;
@@ -23,9 +17,8 @@ namespace Kinect_UDP_Sender
         //WriteableBitmap outputImg = null;
         //byte[] framePixels = null;
         List<Body> bdList = new List<Body>();
-
-        StreamType myStream = StreamType.Color;
-
+        FrameSourceTypes openStreams = FrameSourceTypes.None;
+       
         public KinectController()
         {
             OpenKinect();
@@ -42,15 +35,11 @@ namespace Kinect_UDP_Sender
             {
                 // open the sensor
                 mySensor.Open();
-                // open reader for frame source, specify which streams to be used
-                myReader = mySensor.OpenMultiSourceFrameReader(FrameSourceTypes.Body | FrameSourceTypes.Depth | FrameSourceTypes.Color | FrameSourceTypes.Infrared);
-                // register an event that fires each time a frame is ready
-                myReader.MultiSourceFrameArrived += MultiSouceFrameArrived;
+
             }
             else
                 throw new Exception("Unable to connect to Kinect sensor");
         }
-
 
         public void CloseKinect()
         {
@@ -66,24 +55,26 @@ namespace Kinect_UDP_Sender
                 mySensor = null;
             }
         }
-
-        public void SetStreamType(string streamName)
+        
+        /// <summary>
+        /// Read bools from Preference file, and enable any or all of the data streams
+        /// </summary>
+        public void EnableDataStreams(bool bodyOn, bool colorOn, bool depthOn, bool infraredOn)
         {
-            switch (streamName)
-            {
-                case "Color":
-                    myStream = StreamType.Color;
-                    break;
-                case "Depth":
-                    myStream = StreamType.Depth;
-                    break;
-                case "Infrared":
-                    myStream = StreamType.Infrared;
-                    break;
-                case "Body":
-                    myStream = StreamType.Body;
-                    break;
-            }
+            if(bodyOn)
+                openStreams |= FrameSourceTypes.Body;
+            if (colorOn)
+                openStreams |= FrameSourceTypes.Color;
+            if (depthOn)
+                openStreams |= FrameSourceTypes.Depth;
+            if (infraredOn)
+                openStreams |= FrameSourceTypes.Infrared;
+            
+            // open reader for frame source, specify which streams to be used
+            myReader = mySensor.OpenMultiSourceFrameReader(openStreams);
+            // register an event that fires each time a frame is ready
+            myReader.MultiSourceFrameArrived += MultiSouceFrameArrived;
+
         }
 
         /// <summary>
@@ -96,11 +87,16 @@ namespace Kinect_UDP_Sender
         private void MultiSouceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
             var frame = e.FrameReference.AcquireFrame();
+            // millisecond component of the time represented by current time in local computer
+            long timeStamp = DateTimeOffset.Now.Millisecond;
+            //byte[] timeStamp = BitConverter.GetBytes(timeInMillisec);
+
+
 
             bdList.Clear();
 
             #region Body
-            if (myStream == StreamType.Body)
+            if ((openStreams | FrameSourceTypes.Body) != 0)
             {
                 // frame will be automatically disposed of when done using it
                 using (BodyFrame bdFrame = frame.BodyFrameReference.AcquireFrame())
@@ -122,51 +118,100 @@ namespace Kinect_UDP_Sender
                         // if at least one body is tracked
                         if (bdList.Capacity != 0)
                         {
-                            BodyFrameReady(this, new BodyFrameReadyEventArgs(bdList));
+                            BodyFrameReady(this, new BodyFrameReadyEventArgs(bdList,timeStamp));
                         }
                     }
                 }
             }
             #endregion  
 
-            #region Depth
-            if (myStream == StreamType.Depth)
+            #region Color
+            if ((openStreams | FrameSourceTypes.Color) != 0)
             {
-                
+                using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
+                {
+                    if (cFrame != null)
+                    {
+
+                        //double fps = 1.0 / cFrame.ColorCameraSettings.FrameInterval.TotalSeconds;
+
+                        //Console.WriteLine(cFrame.RawColorImageFormat); // return Yuy2 - 2 bytes per pixel
+                        // should be 4 bytes store the data from one pixel
+                        int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel / 8;
+
+                        FrameDescription fd = cFrame.FrameDescription;
+                        var size = fd.Width * fd.Height * bytesPerPixel;
+                        // store the pixel data and then allocate the memory array
+                        var buffer = new byte[size];
+
+                        // want to return the color image frame in BGRA format
+                        cFrame.CopyConvertedFrameDataToArray(buffer, ColorImageFormat.Bgra);
+//                        string hi = BitConverter.ToString(buffer);
+ //                       Console.WriteLine(hi.Replace("-", ""));
+                        //cFrame.CopyRawFrameDataToArray(pixels);
+
+                        ColorFrameReady(this, new ColorFrameReadyEventArgs(buffer, timeStamp));
+                    }
+                }
+
+                Thread.Sleep(100000);
+            }
+            #endregion
+
+            #region Depth
+            if ((openStreams | FrameSourceTypes.Depth) != 0)
+            {
                 using (DepthFrame dFrame = frame.DepthFrameReference.AcquireFrame())
                 {
                     if (dFrame != null)
                     {
-                        DepthFrameReady(this, new DepthFrameReadyEventArgs(dFrame.DepthFrameProcessor()));
+                        FrameDescription fd = dFrame.FrameDescription;
+                        var size = fd.Width * fd.Height * fd.BytesPerPixel;
+                        // 512 * 424 * 2 = 434,176
+
+                        // sizeof(long) = 8
+                        var buffer = new byte[size];
+                        
+                        // access to the underlying buffer used by the system to store this frame's data
+                        using (var dFrameBuffer = dFrame.LockImageBuffer())
+                        {
+                            Marshal.Copy(dFrameBuffer.UnderlyingBuffer, buffer, 0, (int)dFrameBuffer.Size);
+                        }
+                        //Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
+
+                        DepthFrameReady(this, new DepthFrameReadyEventArgs(buffer, timeStamp));
                     }
                 }
             }
             #endregion  
-
-            #region Color
-            using (ColorFrame cFrame = frame.ColorFrameReference.AcquireFrame())
-            {
-                if (cFrame != null && myStream == StreamType.Color)
-                {
-                    //Console.WriteLine("hi"); // did get called
-                    ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
-                }
-            }
             
-            #endregion
-
             #region Infrared
-            if (myStream == StreamType.Infrared)
+            if ((openStreams | FrameSourceTypes.Infrared) != 0)
             {
                 using (InfraredFrame iFrame = frame.InfraredFrameReference.AcquireFrame())
                 {
                     if (iFrame != null)
                     {
-                        InfraredFrameReady(this, new InfraredFrameReadyEventArgs(iFrame.InfraredFrameProcessor()));
+                        FrameDescription fd = iFrame.FrameDescription;
+                        var size = fd.Width * fd.Height * fd.BytesPerPixel;
+                        //Console.WriteLine(size);//434,176
+
+                        // sizeof(long) = 8
+                        var buffer = new byte[size];
+
+                        // access to the underlying buffer used by the system to store this frame's data
+                        using (var iFrameBuffer = iFrame.LockImageBuffer())
+                        {
+                            Marshal.Copy(iFrameBuffer.UnderlyingBuffer, buffer, 0, (int)iFrameBuffer.Size);
+                        }
+                        //Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
+
+                        InfraredFrameReady(this, new InfraredFrameReadyEventArgs(buffer, timeStamp));
                     }
                 }
             }
             #endregion
+            
         }
 
 
@@ -186,30 +231,23 @@ namespace Kinect_UDP_Sender
 
     public class ColorFrameReadyEventArgs : EventArgs
     {
-        public byte[] ColorFrameData
+        public byte[] ColorFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public ColorFrameReadyEventArgs(byte[] colorFramePixels, long timeStamp)
         {
-            get;
-            set;
-        }
-        public ColorFrameReadyEventArgs(byte[] colorFramePixels)
-        {
-            //Console.WriteLine(colorFramePixels[8]);// did get data
             this.ColorFrameData = colorFramePixels;
-            //Console.WriteLine(ColorFrameData[8]);// get same data
+            this.TimeStamp = timeStamp;
         }
     }
 
     public class BodyFrameReadyEventArgs : EventArgs
     {
-        public string BodyFrameData
+        public string BodyFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public BodyFrameReadyEventArgs(List<Body> bdList, long timeStamp)
         {
-            get;
-            set;
-        }
-        public BodyFrameReadyEventArgs(List<Body> bdList)
-        {
-            // convert it to string
             this.BodyFrameData = JsonConvert.SerializeObject(bdList);
+            this.TimeStamp = timeStamp;
         }
     }
 
@@ -217,27 +255,23 @@ namespace Kinect_UDP_Sender
 
     public class DepthFrameReadyEventArgs : EventArgs
     {
-        public byte[] DepthFrameData
-        {
-            get;
-            set;
-        }
-        public DepthFrameReadyEventArgs(byte[] depthFramePixels)
+        public byte[] DepthFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public DepthFrameReadyEventArgs(byte[] depthFramePixels, long timeStamp)
         {
             this.DepthFrameData = depthFramePixels;
+            this.TimeStamp = timeStamp;
         }
     }
 
     public class InfraredFrameReadyEventArgs : EventArgs
     {
-        public byte[] InfraredFrameData
-        {
-            get;
-            set;
-        }
-        public InfraredFrameReadyEventArgs(byte[] infraredFramePixels)
+        public byte[] InfraredFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public InfraredFrameReadyEventArgs(byte[] infraredFramePixels, long timeStamp)
         {
             this.InfraredFrameData = infraredFramePixels;
+            this.TimeStamp = timeStamp;
         }
     }
 }

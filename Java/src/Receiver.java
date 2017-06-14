@@ -15,13 +15,15 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static javax.imageio.ImageIO.*;
+
 /**
  * Created by Zhiling on 5/20/17.
  */
 public class Receiver implements Runnable {
 
     // unbounded
-    ArrayBlockingQueue<byte[]> receivedMsgs = new ArrayBlockingQueue<byte[]>(100);
+    ArrayBlockingQueue<byte[]> receivedMsgs = new ArrayBlockingQueue<byte[]>(2000);
 
     private DatagramSocket mySocket;
 //    private int myPort;
@@ -50,23 +52,21 @@ public class Receiver implements Runnable {
             /* buffer is filled with the data received */
             try {
                 InetAddress address = InetAddress.getByName("127.0.0.1");
-                byte[] msg = new byte[WIDTH*HEIGHT*4];
+                byte[] msg = new byte[6000];
                 packet = new DatagramPacket(msg, msg.length);
                 /* blocks until it receives a datagram */
                 mySocket.receive(packet);
                 receivedMsgs.offer(msg, timeOut, TimeUnit.MILLISECONDS);
-
-                if (packet == null)
-                    System.out.println("jho");
-                SaveAsColorIMG(packet.getData());
-
                 System.out.println(new String(msg));
-            } catch (IOException ioe) {
+            } catch (IOException | InterruptedException ioe) {
                 ioe.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
+    }
+
+    private void HandlePacket(DatagramPacket packet, byte[] msg){
+
+        System.out.println("hi");
     }
 
     private void SaveAsColorIMG(byte[] imageBytes) throws IOException {
@@ -74,11 +74,11 @@ public class Receiver implements Runnable {
 //        BufferedImage img = new BufferedImage(WIDTH,HEIGHT BufferedImage.TYPE_INT_ARGB);
         System.out.println("hi");
         InputStream in = new ByteArrayInputStream(imageBytes);
-        BufferedImage img = ImageIO.read(in);
+        BufferedImage img = read(in);
         if (img == null)
             System.out.println("jho");
 
-        ImageIO.write(img, "jpg", new File("C:\\Users\\durian_milk\\Pictures\\hi.jpg"));
+        write(img, "jpg", new File("C:\\Users\\durian_milk\\Pictures\\hi.jpg"));
     }
     /**
      * Stops the thread that is running and shut down
@@ -122,5 +122,6 @@ public class Receiver implements Runnable {
 
         Receiver receiver = new Receiver(port);
         new Thread(receiver).start();
+
     }
 }

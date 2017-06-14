@@ -1,11 +1,6 @@
 ﻿using Microsoft.Kinect;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -22,82 +17,56 @@ namespace Kinect_UDP_Sender
         {
             //Console.WriteLine(frame.RawColorImageFormat); return Yuy2 - 2 bytes per pixel
             // should be 4 bytes store the data from one pixel
-            int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel/8;
+            //int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel/8;
 
             FrameDescription fd = frame.FrameDescription;
             
             // store the pixel data and then allocate the memory array
-            byte[] pixels = new byte[fd.Width * fd.Height * bytesPerPixel];
+            byte[] pixels = new byte[fd.Width * fd.Height];
+            //Console.WriteLine("size:" + pixels.Length);
             //byte[] pixels = new byte[fd.LengthInPixels];
 
             // want to return the color image frame in BGRA format
-            frame.CopyConvertedFrameDataToArray(pixels, ColorImageFormat.Bgra);
+            //frame.CopyConvertedFrameDataToArray(pixels, ColorImageFormat.Bgra);
+            frame.CopyRawFrameDataToArray(pixels);
 
-            // create a bitmap to store the data
-            WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
-            outputImg.Lock();           // reserve the back buffer for updates
-                                        // write the pixel data into the bitmap
-            Marshal.Copy(pixels, 0, outputImg.BackBuffer, pixels.Length);
-            // specify the area of the bitmap that changed
-            outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
-            outputImg.Unlock();         //  release the back buffer to make it available for display.
-            BitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(outputImg as BitmapSource));
-            using (var stream = new FileStream("temp.jpg", FileMode.Create))
-            {
-                encoder.Save(stream);
-            }
-            using (FileStream stream = new FileStream("temp.jpg", FileMode.Open, FileAccess.Read))
-            {
-                using (BinaryReader reader = new BinaryReader(stream))
-                {
-                    return reader.ReadBytes((int)stream.Length);
-                }
-            }
+            //// create a bitmap to store the data
+            //WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
+            //outputImg.Lock();           // reserve the back buffer for updates
+            //                            // write the pixel data into the bitmap
+            //Marshal.Copy(pixels, 0, outputImg.BackBuffer, pixels.Length);
+            //// specify the area of the bitmap that changed
+            //outputImg.AddDirtyRect(new Int32Rect(0, 0, fd.Width, fd.Height));
+            //outputImg.Unlock();         //  release the back buffer to make it available for display.
+            //BitmapEncoder encoder = new JpegBitmapEncoder();
+            //encoder.Frames.Add(BitmapFrame.Create(outputImg as BitmapSource));
+            //using (var stream = new FileStream("temp.jpg", FileMode.Create))
+            //{
+            //    encoder.Save(stream);
+            //}
+            //using (FileStream stream = new FileStream("temp.jpg", FileMode.Open, FileAccess.Read))
+            //{
+            //    using (BinaryReader reader = new BinaryReader(stream))
+            //    {
+            //        return reader.ReadBytes((int)stream.Length);
+            //    }
+            //}
 
-                //return pixels;
+            return pixels;
         }
 
-        public static byte[] DepthFrameProcessor(this DepthFrame frame)
+        public static byte[] DepthFrameProcessor(this DepthFrame frame, long timeStamp)
         {
             FrameDescription fd = frame.FrameDescription;
+            var depthBuffer = new byte[fd.Width * fd.Height * fd.BytesPerPixel];
 
-            ushort[] tempData = new ushort[fd.Width * fd.Height];
-            // * bytes per pixel
-            byte[] convertedPixels = new byte[fd.Width * fd.Height * 4];
-            // use the WriteableBitmap to display the mapped depth data.
-            WriteableBitmap outputImg = new WriteableBitmap(fd.Width, fd.Height, 96.0, 96.0, PixelFormats.Bgra32, null);
-
-            frame.CopyFrameDataToArray(tempData);
-
-            // Get the min and max reliable depth for the current frame, in millimeters
-            int minDepth = frame.DepthMinReliableDistance;
-            int maxDepth = frame.DepthMaxReliableDistance;
-
-            for (int i = 0; i < tempData.Length; i++)
+            using (var depthFrameBuffer = frame.LockImageBuffer())
             {
-                ushort depth = tempData[i];
-                byte intensity = (byte)(depth >= minDepth && depth <= maxDepth ? depth : 0);
-                // Write out blue byte
-                convertedPixels[i++] = intensity;
-
-                // Write out green byte
-                convertedPixels[i++] = intensity;
-
-                // Write out red byte                        
-                convertedPixels[i++] = intensity;
-
-                // If we were outputting BGRA, we would write alpha here.
-                convertedPixels[i++] = 255;
+                Marshal.Copy(depthFrameBuffer.UnderlyingBuffer, depthBuffer, 0, (int)depthFrameBuffer.Size);
             }
+            //Buffer.BlockCopy(BitConverter.GetBytes(timeStamp), 0, depthBuffer, (int)(fd.Width * fd.Height * fd.BytesPerPixel), sizeof(long));
 
-            int stride = fd.Width * PixelFormats.Bgr32.BitsPerPixel / 8;
-            // Use the WriteableBitmap.WritePixels method to save the pixel data
-            outputImg.WritePixels(new Int32Rect(0, 0, fd.Width, fd.Height),
-                                  convertedPixels, outputImg.PixelWidth * sizeof(int),
-                                  0);
-
-            return convertedPixels;
+            return depthBuffer;
         }
 
         public static byte[] InfraredFrameProcessor(this InfraredFrame frame)
