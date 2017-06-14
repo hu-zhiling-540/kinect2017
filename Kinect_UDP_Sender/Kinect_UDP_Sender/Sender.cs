@@ -2,8 +2,8 @@
 using System.Net;
 using System.Net.Sockets;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Kinect_UDP_Sender
 {
@@ -15,7 +15,7 @@ namespace Kinect_UDP_Sender
         IPEndPoint remoteIPEP = null;
         Socket mySocket = null;
 
-        int upperLimit = 10000;
+        int upperLimit = 64000;
 
 
         /// <summary>
@@ -71,9 +71,12 @@ namespace Kinect_UDP_Sender
                 // check if more than once packet to be sent
                 if (count > 1)
                 {
+                    //Console.WriteLine("sending");
                     ICollection<Packet> packets = SplitUpMsg(timeStamp, count, remainder, msg);
                     foreach (Packet packet in packets)
                     {
+                        Console.WriteLine("hi");
+                        Console.WriteLine(packet.Serialize());
                         mySocket.SendTo(packet.Serialize(), remoteIPEP);
                     }
                 }
@@ -87,16 +90,16 @@ namespace Kinect_UDP_Sender
         public ICollection<Packet> SplitUpMsg(long timeStamp, int count, int remainder, byte[] msg)
         {
             List<Packet> packets = new List<Packet>();
-            for ( int i = 1; i < count; i++)
+
+            for ( int i = 1; i <= count; i++)
             {
                 byte[] packetData = new byte[upperLimit];
                 Buffer.BlockCopy(msg, (i - 1) * upperLimit, packetData, 0, upperLimit);
+                Packet p = new Packet(timeStamp, i, count, packetData);
+                //Console.WriteLine("hi");
                 packets.Add(new Packet(timeStamp, i, count, packetData));
             }
-
-            //for the remainder packet
-
-
+            
             return packets;
         }
 

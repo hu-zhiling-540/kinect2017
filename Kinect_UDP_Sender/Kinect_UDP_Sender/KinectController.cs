@@ -4,9 +4,7 @@ using Microsoft.Kinect;
 using Newtonsoft.Json;
 using System.Windows.Media;
 using System.Runtime.InteropServices;
-using System.Drawing;
-using System.Windows.Media.Imaging;
-using System.Windows;
+using System.Threading;
 
 namespace Kinect_UDP_Sender
 {
@@ -21,7 +19,6 @@ namespace Kinect_UDP_Sender
         List<Body> bdList = new List<Body>();
         FrameSourceTypes openStreams = FrameSourceTypes.None;
        
-        WriteableBitmap bitmap;
         public KinectController()
         {
             OpenKinect();
@@ -38,7 +35,6 @@ namespace Kinect_UDP_Sender
             {
                 // open the sensor
                 mySensor.Open();
-                
 
             }
             else
@@ -92,8 +88,10 @@ namespace Kinect_UDP_Sender
         {
             var frame = e.FrameReference.AcquireFrame();
             // millisecond component of the time represented by current time in local computer
-            long timeInMillisec = DateTimeOffset.Now.Millisecond;
-            byte[] timeStamp = BitConverter.GetBytes(timeInMillisec);
+            long timeStamp = DateTimeOffset.Now.Millisecond;
+            //byte[] timeStamp = BitConverter.GetBytes(timeInMillisec);
+
+
 
             bdList.Clear();
 
@@ -120,7 +118,7 @@ namespace Kinect_UDP_Sender
                         // if at least one body is tracked
                         if (bdList.Capacity != 0)
                         {
-                            BodyFrameReady(this, new BodyFrameReadyEventArgs(bdList));
+                            BodyFrameReady(this, new BodyFrameReadyEventArgs(bdList,timeStamp));
                         }
                     }
                 }
@@ -134,22 +132,29 @@ namespace Kinect_UDP_Sender
                 {
                     if (cFrame != null)
                     {
+
+                        //double fps = 1.0 / cFrame.ColorCameraSettings.FrameInterval.TotalSeconds;
+
+                        //Console.WriteLine(cFrame.RawColorImageFormat); // return Yuy2 - 2 bytes per pixel
+                        // should be 4 bytes store the data from one pixel
+                        int bytesPerPixel = PixelFormats.Bgra32.BitsPerPixel / 8;
+
                         FrameDescription fd = cFrame.FrameDescription;
-                        int bytesPerPixel = (PixelFormats.Bgra32.BitsPerPixel + 7)/ 8;
-                        byte[] data = new byte[bytesPerPixel * fd.Width * fd.Height];
-                        cFrame.CopyConvertedFrameDataToArray(data, ColorImageFormat.Bgra);
-                        int stride = fd.Width * PixelFormats.Bgra32.BitsPerPixel / 8;
-                        ////Console.WriteLine(fd.BytesPerPixel);
-                        //Console.WriteLine(size);//434,176
+                        var size = fd.Width * fd.Height * bytesPerPixel;
+                        // store the pixel data and then allocate the memory array
+                        var buffer = new byte[size];
 
-                        //var storage = new byte[size + sizeof(long)];
-                        BitmapSource bitmap = BitmapSource.Create(fd.Width, fd.Height, 96, 96, PixelFormats.Bgra32, null, data, stride);
-                        ScaleTransform scale = new ScaleTransform((640.0 / bitmap.PixelWidth), (480.0 / bitmap.PixelHeight));
-                        TransformedBitmap tbBitmap = new TransformedBitmap(bitmap, scale);
+                        // want to return the color image frame in BGRA format
+                        cFrame.CopyConvertedFrameDataToArray(buffer, ColorImageFormat.Bgra);
+                        //string hi = BitConverter.ToString(pixels);
+                        //Console.WriteLine(hi.Replace("-", ""));
+                        //cFrame.CopyRawFrameDataToArray(pixels);
 
-                        ColorFrameReady(this, new ColorFrameReadyEventArgs(cFrame.ColorFrameProcessor()));
+                        ColorFrameReady(this, new ColorFrameReadyEventArgs(buffer, timeStamp));
                     }
                 }
+
+                Thread.Sleep(100000);
             }
             #endregion
 
@@ -165,16 +170,16 @@ namespace Kinect_UDP_Sender
                         // 512 * 424 * 2 = 434,176
 
                         // sizeof(long) = 8
-                        var buffer = new byte[size + sizeof(long)];
+                        var buffer = new byte[size];
                         
                         // access to the underlying buffer used by the system to store this frame's data
                         using (var dFrameBuffer = dFrame.LockImageBuffer())
                         {
                             Marshal.Copy(dFrameBuffer.UnderlyingBuffer, buffer, 0, (int)dFrameBuffer.Size);
                         }
-                        Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
+                        //Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
 
-                        DepthFrameReady(this, new DepthFrameReadyEventArgs(buffer));
+                        DepthFrameReady(this, new DepthFrameReadyEventArgs(buffer, timeStamp));
                     }
                 }
             }
@@ -189,25 +194,24 @@ namespace Kinect_UDP_Sender
                     {
                         FrameDescription fd = iFrame.FrameDescription;
                         var size = fd.Width * fd.Height * fd.BytesPerPixel;
-
-                        Console.WriteLine(fd.BytesPerPixel);
                         //Console.WriteLine(size);//434,176
 
                         // sizeof(long) = 8
-                        var buffer = new byte[size + sizeof(long)];
+                        var buffer = new byte[size];
 
                         // access to the underlying buffer used by the system to store this frame's data
                         using (var iFrameBuffer = iFrame.LockImageBuffer())
                         {
                             Marshal.Copy(iFrameBuffer.UnderlyingBuffer, buffer, 0, (int)iFrameBuffer.Size);
                         }
-                        Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
+                        //Buffer.BlockCopy(timeStamp, 0, buffer, (int)(size), sizeof(long));
 
-                        InfraredFrameReady(this, new InfraredFrameReadyEventArgs(buffer));
+                        InfraredFrameReady(this, new InfraredFrameReadyEventArgs(buffer, timeStamp));
                     }
                 }
             }
             #endregion
+            
         }
 
 
@@ -227,28 +231,23 @@ namespace Kinect_UDP_Sender
 
     public class ColorFrameReadyEventArgs : EventArgs
     {
-        public byte[] ColorFrameData
+        public byte[] ColorFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public ColorFrameReadyEventArgs(byte[] colorFramePixels, long timeStamp)
         {
-            get;
-            set;
-        }
-        public ColorFrameReadyEventArgs(byte[] colorFramePixels)
-        {
-            Console.WriteLine(colorFramePixels.Length);
             this.ColorFrameData = colorFramePixels;
+            this.TimeStamp = timeStamp;
         }
     }
 
     public class BodyFrameReadyEventArgs : EventArgs
     {
-        public string BodyFrameData
-        {
-            get;
-            set;
-        }
-        public BodyFrameReadyEventArgs(List<Body> bdList)
+        public string BodyFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public BodyFrameReadyEventArgs(List<Body> bdList, long timeStamp)
         {
             this.BodyFrameData = JsonConvert.SerializeObject(bdList);
+            this.TimeStamp = timeStamp;
         }
     }
 
@@ -256,27 +255,23 @@ namespace Kinect_UDP_Sender
 
     public class DepthFrameReadyEventArgs : EventArgs
     {
-        public byte[] DepthFrameData
-        {
-            get;
-            set;
-        }
-        public DepthFrameReadyEventArgs(byte[] depthFramePixels)
+        public byte[] DepthFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public DepthFrameReadyEventArgs(byte[] depthFramePixels, long timeStamp)
         {
             this.DepthFrameData = depthFramePixels;
+            this.TimeStamp = timeStamp;
         }
     }
 
     public class InfraredFrameReadyEventArgs : EventArgs
     {
-        public byte[] InfraredFrameData
-        {
-            get;
-            set;
-        }
-        public InfraredFrameReadyEventArgs(byte[] infraredFramePixels)
+        public byte[] InfraredFrameData { get; set; }
+        public long TimeStamp { get; set; }
+        public InfraredFrameReadyEventArgs(byte[] infraredFramePixels, long timeStamp)
         {
             this.InfraredFrameData = infraredFramePixels;
+            this.TimeStamp = timeStamp;
         }
     }
 }

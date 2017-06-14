@@ -23,7 +23,7 @@ import static javax.imageio.ImageIO.*;
 public class Receiver implements Runnable {
 
     // unbounded
-    ArrayBlockingQueue<byte[]> receivedMsgs = new ArrayBlockingQueue<byte[]>(100);
+    ArrayBlockingQueue<byte[]> receivedMsgs = new ArrayBlockingQueue<byte[]>(2000);
 
     private DatagramSocket mySocket;
 //    private int myPort;
@@ -52,7 +52,7 @@ public class Receiver implements Runnable {
             /* buffer is filled with the data received */
             try {
                 InetAddress address = InetAddress.getByName("127.0.0.1");
-                byte[] msg = new byte[10000];
+                byte[] msg = new byte[6000];
                 packet = new DatagramPacket(msg, msg.length);
                 /* blocks until it receives a datagram */
                 mySocket.receive(packet);

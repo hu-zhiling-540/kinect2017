@@ -1,11 +1,6 @@
 ﻿using Microsoft.Kinect;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -63,13 +58,13 @@ namespace Kinect_UDP_Sender
         public static byte[] DepthFrameProcessor(this DepthFrame frame, long timeStamp)
         {
             FrameDescription fd = frame.FrameDescription;
-            var depthBuffer = new byte[fd.Width * fd.Height * fd.BytesPerPixel + sizeof(long)];
+            var depthBuffer = new byte[fd.Width * fd.Height * fd.BytesPerPixel];
 
             using (var depthFrameBuffer = frame.LockImageBuffer())
             {
                 Marshal.Copy(depthFrameBuffer.UnderlyingBuffer, depthBuffer, 0, (int)depthFrameBuffer.Size);
             }
-            Buffer.BlockCopy(BitConverter.GetBytes(timeStamp), 0, depthBuffer, (int)(fd.Width * fd.Height * fd.BytesPerPixel), sizeof(long));
+            //Buffer.BlockCopy(BitConverter.GetBytes(timeStamp), 0, depthBuffer, (int)(fd.Width * fd.Height * fd.BytesPerPixel), sizeof(long));
 
             return depthBuffer;
         }

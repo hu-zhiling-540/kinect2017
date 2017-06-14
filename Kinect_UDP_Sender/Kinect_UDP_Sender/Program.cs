@@ -98,25 +98,22 @@ namespace Kinect_UDP_Sender
 
         static void KinectColorFrameReceived(object obj, ColorFrameReadyEventArgs c)
         {
-            Console.WriteLine(c.ColorFrameData[1]);
-            sender.SendMessage(c.ColorFrameData);
+            sender.SendMessage(c.ColorFrameData, c.TimeStamp);
         }
 
         static void KinectBodyFrameReceived(object obj, BodyFrameReadyEventArgs f)
         {
-            Console.WriteLine(f.BodyFrameData.Length);
             sender.SendMessage(f.BodyFrameData);
         }
 
 		static void KinectDepthFrameReceived(object obj, DepthFrameReadyEventArgs d)
 		{
-			//Console.WriteLine(d.DepthFrameData[25]);
-			sender.SendMessage(d.DepthFrameData);
+			sender.SendMessage(d.DepthFrameData, d.TimeStamp);
 		}
         
         static void KinectInfraredFrameReceived(object obj, InfraredFrameReadyEventArgs i)
         {
-            sender.SendMessage(i.InfraredFrameData);
+            sender.SendMessage(i.InfraredFrameData, i.TimeStamp);
         }
     }
 
