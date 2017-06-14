@@ -58,6 +58,30 @@ namespace Kinect_UDP_Sender
 
         public void SendMessage(byte[] msg, long timeStamp)
         {
+            int offset = 0;
+            int i = 0;
+            int count = (int)Math.Ceiling((float)msg.Length / (float)upperLimit);
+            while (offset < msg.Length)
+            {
+                int len = upperLimit;
+                if (len + offset >= msg.Length)
+                {
+                    len = msg.Length - offset;
+                }
+                byte[] packetData = new byte[len];
+                Buffer.BlockCopy(msg, offset, packetData, 0, len);
+                Packet packet = new Packet(timeStamp, i, count, packetData);
+                mySocket.SendTo(packet.Serialize(), remoteIPEP);
+                offset += len;
+                i++;
+            }
+            /*
+            return packets;
+        }
+
+
+            }
+
             // if the message exceeds over the maximum size
             if (msg.Length > upperLimit)
             {
@@ -85,22 +109,24 @@ namespace Kinect_UDP_Sender
             {
                 mySocket.SendTo(msg, remoteIPEP);
             }
-        }
+        }*/
+            /*
+                public ICollection<Packet> SplitUpMsg(long timeStamp, int count, int remainder, byte[] msg)
+                {
+                    List<Packet> packets = new List<Packet>();
 
-        public ICollection<Packet> SplitUpMsg(long timeStamp, int count, int remainder, byte[] msg)
-        {
-            List<Packet> packets = new List<Packet>();
+                    for (int i = 1; i <= count; i++)
+                    {
+                        byte[] packetData = new byte[upperLimit];
+                        Buffer.BlockCopy(msg, (i - 1) * upperLimit, packetData, 0, upperLimit);
+                        //Packet p = new Packet(timeStamp, i, count, packetData);
+                        //Console.WriteLine("hi");
+                        packets.Add(new Packet(timeStamp, i, count, packetData));
+                    }
 
-            for ( int i = 1; i <= count; i++)
-            {
-                byte[] packetData = new byte[upperLimit];
-                Buffer.BlockCopy(msg, (i - 1) * upperLimit, packetData, 0, upperLimit);
-                Packet p = new Packet(timeStamp, i, count, packetData);
-                //Console.WriteLine("hi");
-                packets.Add(new Packet(timeStamp, i, count, packetData));
-            }
-            
-            return packets;
+                    return packets;
+                }
+                */
         }
 
     }

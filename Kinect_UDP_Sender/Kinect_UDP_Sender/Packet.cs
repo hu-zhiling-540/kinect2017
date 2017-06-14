@@ -43,18 +43,18 @@ namespace Kinect_UDP_Sender
             //Console.WriteLine(System.Convert.ToString(data));
             ////Console.WriteLine(hi.Replace("-", ""));
             //return data;
-
+            
             // dispose memory stream once done processing it
             using (var memstrm = new MemoryStream())
             {
+                
                 BinaryFormatter formatter = new BinaryFormatter();
                 // serialize the packet into the stream
                 formatter.Serialize(memstrm, packet);
-
-                byte[] data = memstrm.GetBuffer();
+                byte[] data = memstrm.ToArray();
 
                 //string hi = BitConverter.ToString(data);
-                //Console.WriteLine(hi.Replace("-", ""));
+                Console.WriteLine(data);
                 //Console.WriteLine(System.Convert.ToString(data));
 
                 return data;

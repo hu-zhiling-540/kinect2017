@@ -146,8 +146,8 @@ namespace Kinect_UDP_Sender
 
                         // want to return the color image frame in BGRA format
                         cFrame.CopyConvertedFrameDataToArray(buffer, ColorImageFormat.Bgra);
-                        //string hi = BitConverter.ToString(pixels);
-                        //Console.WriteLine(hi.Replace("-", ""));
+//                        string hi = BitConverter.ToString(buffer);
+ //                       Console.WriteLine(hi.Replace("-", ""));
                         //cFrame.CopyRawFrameDataToArray(pixels);
 
                         ColorFrameReady(this, new ColorFrameReadyEventArgs(buffer, timeStamp));
