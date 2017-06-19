@@ -68,10 +68,11 @@ namespace Kinect_UDP_Sender
                 {
                     len = msg.Length - offset;
                 }
-                byte[] packetData = new byte[len];
+                byte[] packetData = new byte[len+ sizeof(long)];
                 Buffer.BlockCopy(msg, offset, packetData, 0, len);
-                Packet packet = new Packet(timeStamp, i, count, packetData);
-                mySocket.SendTo(packet.Serialize(), remoteIPEP);
+                Buffer.BlockCopy(msg, 0, packetData, len, sizeof(long));
+                // Packet packet = new Packet(timeStamp, i, count, packetData);
+                mySocket.SendTo(packetData, remoteIPEP);
                 offset += len;
                 i++;
             }
