@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Kinect_UDP_Sender
@@ -31,19 +30,6 @@ namespace Kinect_UDP_Sender
         public static byte[] Serialize(this Packet packet)
         {
 
-            // construct a BinaryFormatter and use it to serialize the data to the stream
-            //MemoryStream memstrm = new MemoryStream();
-            //BinaryFormatter formatter = new BinaryFormatter();
-            //formatter.Serialize(memstrm, packet);
-            //memstrm.Position = 0;
-            //byte[] data = memstrm.GetBuffer();
-            //memstrm.Read(data, 0, data.Length);
-            //memstrm.Close();
-            ////string hi = BitConverter.ToString(data);
-            //Console.WriteLine(System.Convert.ToString(data));
-            ////Console.WriteLine(hi.Replace("-", ""));
-            //return data;
-            
             // dispose memory stream once done processing it
             using (var memstrm = new MemoryStream())
             {
@@ -53,12 +39,8 @@ namespace Kinect_UDP_Sender
                 formatter.Serialize(memstrm, packet);
                 byte[] data = memstrm.ToArray();
 
-                //string hi = BitConverter.ToString(data);
-                Console.WriteLine(data);
-                //Console.WriteLine(System.Convert.ToString(data));
-
                 return data;
-                //return memstrm.GetBuffer();
+                //return memstrm.ToArray();
             }
         }
     }
