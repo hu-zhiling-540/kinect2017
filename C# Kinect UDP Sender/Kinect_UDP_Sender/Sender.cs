@@ -2,8 +2,8 @@
 using System.Net;
 using System.Net.Sockets;
 using System;
-using System.Collections.Generic;
-using System.Threading;
+using System.IO.Compression;
+using System.IO;
 
 namespace Kinect_UDP_Sender
 {
@@ -28,24 +28,6 @@ namespace Kinect_UDP_Sender
             mySocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         }
 
-
-        ///<summary>
-        ///Sends messages of type Byte
-        ///</summary>
-        //public void SendMessage(byte[] msg)
-        //{
-        //    var maxData = new byte[upperLimit];
-        //    int remaining = msg.Length;
-        //    while(remaining > 0)
-        //    {
-        //        int size = Math.Min(remaining, upperLimit);
-        //        Array.Copy(msg, msg.Length - remaining, maxData, 0, upperLimit);
-        //        mySocket.SendTo(maxData, remoteIPEP);
-        //        remaining -= size;
-        //    }
-
-        //}
-
         ///<summary>
         ///Sends messages of type string
         ///</summary>
@@ -68,66 +50,28 @@ namespace Kinect_UDP_Sender
                 {
                     len = msg.Length - offset;
                 }
-                byte[] packetData = new byte[len+ sizeof(long)];
+                // data, timestamp, serial number, count
+                byte[] packetData = new byte[len+ sizeof(long) + sizeof(int) + sizeof(int)];
                 Buffer.BlockCopy(msg, offset, packetData, 0, len);
                 Buffer.BlockCopy(msg, 0, packetData, len, sizeof(long));
-                // Packet packet = new Packet(timeStamp, i, count, packetData);
+                Buffer.BlockCopy(msg, 0, packetData, len + sizeof(long), sizeof(int));
+                Buffer.BlockCopy(msg, 0, packetData, len + sizeof(long) + sizeof(int), sizeof(int));
+
                 mySocket.SendTo(packetData, remoteIPEP);
                 offset += len;
                 i++;
             }
-            /*
-            return packets;
         }
 
-
-            }
-
-            // if the message exceeds over the maximum size
-            if (msg.Length > upperLimit)
+        public byte[] Compress(byte[] bytes)
+        {
+            using (MemoryStream ms = new MemoryStream())
             {
-                // count of packets to be divided into
-                int count = msg.Length / upperLimit;
-                // leftover message for the last packet
-                int remainder = msg.Length % upperLimit;
-                // if has remainder, add up one more packet
-                if (remainder > 0)
-                    count += 1;
-                // check if more than once packet to be sent
-                if (count > 1)
-                {
-                    //Console.WriteLine("sending");
-                    ICollection<Packet> packets = SplitUpMsg(timeStamp, count, remainder, msg);
-                    foreach (Packet packet in packets)
-                    {
-                        Console.WriteLine("hi");
-                        Console.WriteLine(packet.Serialize());
-                        mySocket.SendTo(packet.Serialize(), remoteIPEP);
-                    }
-                }
+                GZipStream compress = new GZipStream(ms, CompressionMode.Compress);
+                compress.Write(bytes, 0, bytes.Length);
+                compress.Close();
+                return ms.ToArray();
             }
-            else
-            {
-                mySocket.SendTo(msg, remoteIPEP);
-            }
-        }*/
-            /*
-                public ICollection<Packet> SplitUpMsg(long timeStamp, int count, int remainder, byte[] msg)
-                {
-                    List<Packet> packets = new List<Packet>();
-
-                    for (int i = 1; i <= count; i++)
-                    {
-                        byte[] packetData = new byte[upperLimit];
-                        Buffer.BlockCopy(msg, (i - 1) * upperLimit, packetData, 0, upperLimit);
-                        //Packet p = new Packet(timeStamp, i, count, packetData);
-                        //Console.WriteLine("hi");
-                        packets.Add(new Packet(timeStamp, i, count, packetData));
-                    }
-
-                    return packets;
-                }
-                */
         }
 
     }
