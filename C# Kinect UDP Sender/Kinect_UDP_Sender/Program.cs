@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using SimpleJSON;
-using System.Runtime.Serialization.Json;
-using System.Text;
 
 namespace Kinect_UDP_Sender
 {
