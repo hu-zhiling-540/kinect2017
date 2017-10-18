@@ -2,99 +2,183 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * Hold helper methods to perform the operations,
- * such as calculate distance and velocity, etc.
+ * Hold helper methods to perform the operations, such as calculate distance and
+ * velocity, etc.
+ * 
  * @author Zhiling
  *
  */
 
 public class Computations {
-	
-	public static double diffX(Vertex j1, Vertex j2) {
-		return j1.getX() - j2.getX();
-	}
-	
-	public static double diffY(Vertex j1, Vertex j2) {
-		return j1.getY() - j2.getY();
-	}
-	
-	public static double diffZ(Vertex j1, Vertex j2) {
-		return j1.getZ() - j2.getZ();
-	}
-	
-	// linear distance between vertices in 3d space
-	public static double trajDist(Vertex j1, Vertex j2)	{
-		double x = diffX(j1, j2);
-		double y = diffY(j1, j2);
-		double z = diffZ(j1, j2);
-		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
-	}
-	
-//	public static 
-//	
-//	public static double Tilt()	{
-//		 // arctangent help find the angle given the ratio.
-//	}
-	
+
+	public static final double percent = 0.6;
+	public static final double tol = 0.05; // max distance in meters to classify points as close to the plane
+
 	// a plane represented by a quaternion
 	// point (x, y, z)
 	// should return the distancefrom the point to the plane
-	
-	// BodyFrame.FloorClipPlane. 
-//	The (x,y,z) components are a unit vector indicating the normal of the plane, 
-//	and w is the distance from the plane to the origin in meters.
-	public static double pointPlaneDist(Quat plane, Vertex point)	{
-		// normal vector(i.e. perpendicular) to the plane is given by [a, b, c]
-		double a = plane.getX();
-		double b = plane.getY();
-		double c = plane.getZ();
-		
-		// a vector from the plane to the point is given by w
-		double w = plane.getW();
-		
+
+	// BodyFrame.FloorClipPlane.
+
+	/**
+	 * Calculates the distance between a point and a plane in 3D
+	 * 
+	 * @param plane
+	 * @param point
+	 * @return
+	 */
+	public static double pointPlaneDist(double[] plane, Point3D point) {
+		// (a, b, c) components are a unit vector indicating the normal of the plane
+		double a = plane[0];
+		double b = plane[1];
+		double c = plane[2];
+
+		// w is the distance from the plane to the origin in meters
+		double w = plane[3];
+
 		double x = point.getX();
 		double y = point.getY();
 		double z = point.getZ();
-		
+
 		// projecting w onto v is operated by formula below
-		return Math.abs(a*x + b*y + c*z + w)/Math.sqrt(a*a + b*b + c*c);
-				
+		return Math.abs(a * x + b * y + c * z + w) / Math.sqrt(a * a + b * b + c * c);
+
 	}
-	
-	public static double[] planeDetection(ArrayList<Vertex> points)	{
+
+	/**
+	 * Uses an iterative method called RANSAC to pick up a plane that fits as many
+	 * as possible in a set of points in 3d
+	 * 
+	 * @param points
+	 * @return
+	 */
+	public static double[] planeDetection(ArrayList<Point3D> points) {
 		if (points == null || points.size() == 0)
 			return null;
-		
-		double[] plane = new double[4];
+
 		int size = points.size();
-		int maxFits = 0;
-		
+
+		int numFits = 0;
+		int maxFits = numFits;
+		int estimate = (int) (size * percent);
+
 		// Pick several points at random.
 		Random ran = new Random();
-		Vertex v1 = points.get(ran.nextInt(size));
-		Vertex v2 = points.get(ran.nextInt(size));
-		Vertex v3 = points.get(ran.nextInt(size));
-//		Make a plane.
-//		Check if each other point lies on the plane.
-//		If enough are on the plane - recalculate a best plane from all these points and remove them from the set
-//		If not try another 3 points
-//		Stop when you have enough planes, or too few points left.
-	
-	}
-	
-	// plot a plane from three vertices
-	// ax + by + cz = d
-	public static double[] plotPlane(Vertex v1, Vertex v2, Vertex v3)	{
+
+		Point3D p1;
+		Point3D p2;
+		Point3D p3;
+		double[] plane = new double[4];
+		double[] tempPlane = new double[4];
 		
+		// if not enough points are on the plane
+		while (numFits < estimate) {
+			p1 = points.get(ran.nextInt(size));
+			p2 = points.get(ran.nextInt(size));
+			p3 = points.get(ran.nextInt(size));
+			// make sure three points to form a plane are not collinear
+			while (collinear3dPoints(p1, p2, p3))
+				p3 = points.get(ran.nextInt(size));
+
+			// Make a plane w/ three points given
+			tempPlane = plotPlane(p1, p2, p3);
+
+			// Check if each other point lies on the plane
+			for (int i = 0; i < size; i++) {
+				Point3D tempPoint = points.get(i);
+				if (pointPlaneDist(plane, tempPoint) <= 0.1)
+					numFits++;
+			}
+			if (numFits > maxFits) {
+				maxFits = numFits;
+				plane = tempPlane;
+			}
+		}
+		return plane;
 	}
-	
-	public static double vectorNorm(double[] vector)	{
+
+	/**
+	 * L^2-Norm, i.e: the magnitude
+	 * 
+	 * @param vector
+	 * @return
+	 */
+	public static double magnitude(double[] vector) {
+		double mag = 0.0;
+
+		for (int i = 0; i < vector.length; i++) {
+			mag += Math.pow(vector[i], 2);
+		}
+		return Math.sqrt(mag);
+	}
+
+	/**
+	 * To normalize a vector is to keep the pointing in the same direction, while
+	 * change its length to 1 --> a unit vector. Calc: simply divide each component
+	 * by its magnitude
+	 * 
+	 * @param vector
+	 * @return
+	 */
+	public static double[] noramlize(double[] vector) {
+		double[] unitV = new double[vector.length];
+		double mag = magnitude(vector);
+		for (int i = 0; i < vector.length; i++)
+			unitV[i] = vector[i] / mag;
+		return unitV;
+	}
+
+	public static boolean collinear3dPoints(Point3D p1, Point3D p2, Point3D p3) {
+		double area = p1.getX() * (p2.getY() - p3.getY()) + p2.getX() * (p3.getY() - p1.getY())
+				+ p3.getX() * (p1.getY() - p2.getY());
+		return (area == 0);
+
+	}
+
+	public static boolean collinear3dVectors(double[] v1, double[] v2) {
+		double[] vectorZero = { 0, 0, 0 };
+		if (cross3(v1, v2) == vectorZero)
+			return true;
+		return false;
+	}
+
+	/**
+	 * Plot a plane from three points given Equation 1: a(x-x0) + b(y-y0) + c(z-z0)
+	 * = 0 Equation 2: ax + by + cz + d = 0 where {a, b, c} is the vector norm to
+	 * the plane
+	 * 
+	 * @param p1
+	 *            - a point supposed to be on the plane
+	 * @param p2
+	 * @param p3
+	 * @return
+	 */
+	public static double[] plotPlane(Point3D p1, Point3D p2, Point3D p3) {
+		double[] v1 = subtract(p2.inArr(), p1.inArr()); // a vector goes from p1 to p2
+		double[] v2 = subtract(p3.inArr(), p1.inArr()); // a vector goes from p1 to p3
+		double[] cp = cross3(v1, v2); // cross product of two vectors
+
+		double[] neg_cp = { -cp[0], -cp[1], -cp[2] };
+		double d = dot(neg_cp, p1.inArr());
+
+		double[] plane = { cp[0], cp[1], cp[2], d };
+		return plane;
+	}
+
+	public static double vectorNorm(double[] vector) {
 		double rslt = 0.0;
 		for (int i = 0; i < vector.length; i++)
 			rslt += Math.pow(vector[i], 2);
 		return Math.sqrt(rslt);
 	}
-	
+
+	/**
+	 * Returns dot product of two vectors in any number of dimensions
+	 * 
+	 * @param v1
+	 * @param v2
+	 * @return
+	 */
 	public static double dot(double[] v1, double[] v2) {
 		if (v1.length != v2.length)
 			throw new IllegalArgumentException("Not in the same dimension");
@@ -103,7 +187,16 @@ public class Computations {
 			rslt += v1[i] * v2[i];
 		return rslt;
 	}
-	
+
+	public static double[] cross3(double[] v1, double[] v2) {
+		if (v1.length != v2.length)
+			throw new IllegalArgumentException("Not in the same dimension");
+		double[] rslt = { (v1[1] * v2[2] - v1[2] * v2[1]), // yz - zy
+				(v1[2] * v2[0] - v1[0] * v2[2]), // zx - xz
+				(v1[0] * v2[1] - v1[1] * v2[0]) }; // xy -yx
+		return rslt;
+	}
+
 	public static double[] subtract(double[] v1, double[] v2) {
 		if (v1.length != v2.length)
 			throw new IllegalArgumentException("Not in the same dimension");
@@ -112,6 +205,9 @@ public class Computations {
 			rslt[i] = v1[i] - v2[i];
 		return rslt;
 	}
-	
-	
+
+	public static double slope(double[] vector) {
+		return (double) vector[1] / vector[0];
+	}
+
 }
