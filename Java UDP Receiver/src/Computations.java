@@ -14,10 +14,6 @@ public class Computations {
 	public static final double percent = 0.6;
 	public static final double tol = 0.05; // max distance in meters to classify points as close to the plane
 
-	// a plane represented by a quaternion
-	// point (x, y, z)
-	// should return the distancefrom the point to the plane
-
 	// BodyFrame.FloorClipPlane.
 
 	/**
@@ -98,6 +94,20 @@ public class Computations {
 	}
 
 	/**
+	 * Finds the projection of a point on a plane
+	 * @param plane - defined by norm 
+	 * @param p1 - point on the plane
+	 * @param p2 - point to be projected
+	 * @return
+	 */
+	public static Point3D ptProjOnPlane(double[] plane, Point3D p1, Point3D p2) {
+		double[] normal = new double[] {plane[0], plane[1], plane[2]};
+		double resize = dot(subtract(p2.inArr(), p1.inArr()), normal);
+		double[] rslt = subtract(p2.inArr(), resizeVector(normal, resize));
+		return new Point3D(rslt);
+	}
+	
+	/**
 	 * L^2-Norm, i.e: the magnitude
 	 * 
 	 * @param vector
@@ -143,12 +153,10 @@ public class Computations {
 	}
 
 	/**
-	 * Plot a plane from three points given Equation 1: a(x-x0) + b(y-y0) + c(z-z0)
-	 * = 0 Equation 2: ax + by + cz + d = 0 where {a, b, c} is the vector norm to
+	 * Plot a plane from three points given Equation 1: a(x-x0) + b(y-y0) + c(z-z0) = 0 
+	 * Equation 2: ax + by + cz + d = 0 where {a, b, c} is the vector norm to
 	 * the plane
-	 * 
-	 * @param p1
-	 *            - a point supposed to be on the plane
+	 * @param p1 - a point supposed to be on the plane
 	 * @param p2
 	 * @param p3
 	 * @return
@@ -188,6 +196,12 @@ public class Computations {
 		return rslt;
 	}
 
+	/**
+	 * Returns cross product between two vectors in 3D
+	 * @param v1
+	 * @param v2
+	 * @return
+	 */
 	public static double[] cross3(double[] v1, double[] v2) {
 		if (v1.length != v2.length)
 			throw new IllegalArgumentException("Not in the same dimension");
@@ -197,6 +211,12 @@ public class Computations {
 		return rslt;
 	}
 
+	/**
+	 * Subtracts vector v2 from vector v1
+	 * @param v1
+	 * @param v2
+	 * @return
+	 */
 	public static double[] subtract(double[] v1, double[] v2) {
 		if (v1.length != v2.length)
 			throw new IllegalArgumentException("Not in the same dimension");
@@ -206,6 +226,16 @@ public class Computations {
 		return rslt;
 	}
 
+	public static double[] resizeVector(double[] vector, double size)	{
+		for (int i = 0; i < vector.length; i++)
+			vector[i] *= size;
+		return vector;
+	}
+	/**
+	 * Returns the slope of a vector in (x, y)
+	 * @param vector
+	 * @return
+	 */
 	public static double slope(double[] vector) {
 		return (double) vector[1] / vector[0];
 	}
