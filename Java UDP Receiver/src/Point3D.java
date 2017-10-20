@@ -14,6 +14,12 @@ public class Point3D {
 		posZ = z;
 	}
 	
+	public Point3D(double[] arr)	{
+		posX = arr[0];
+		posY = arr[1];
+		posZ = arr[2];
+	}
+	
 	public double getX()	{
 		return posX;
 	}
