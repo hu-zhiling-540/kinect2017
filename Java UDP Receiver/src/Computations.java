@@ -82,7 +82,7 @@ public class Computations {
 			// Check if each other point lies on the plane
 			for (int i = 0; i < size; i++) {
 				Point3D tempPoint = points.get(i);
-				if (pointPlaneDist(plane, tempPoint) <= 0.1)
+				if (pointPlaneDist(plane, tempPoint) <= tol)
 					numFits++;
 			}
 			if (numFits > maxFits) {
@@ -96,15 +96,30 @@ public class Computations {
 	/**
 	 * Finds the projection of a point on a plane
 	 * @param plane - defined by norm 
-	 * @param p1 - point on the plane
-	 * @param p2 - point to be projected
+	 * @param planePoint - point on the plane
+	 * @param projPoint - point to be projected
 	 * @return
 	 */
-	public static Point3D ptProjOnPlane(double[] plane, Point3D p1, Point3D p2) {
-		double[] normal = new double[] {plane[0], plane[1], plane[2]};
-		double resize = dot(subtract(p2.inArr(), p1.inArr()), normal);
-		double[] rslt = subtract(p2.inArr(), resizeVector(normal, resize));
+	public static Point3D ptProjOnPlane(double[] plane, Point3D planePt, Point3D projPt) {
+		double[] norm = normalize(new double[] {plane[0], plane[1], plane[2]});
+		double resize = dot(subtract(projPt.inArr(), planePt.inArr()), norm);
+		double[] rslt = subtract(projPt.inArr(), resizeVector(norm, resize));
 		return new Point3D(rslt);
+	}
+	
+	/**
+	 * Checks if the point is on the plane
+	 * In order for a point (x,y,z) to be in the plane, it must satisfy Ax+By+Cz+d=0".
+	 * @param plane
+	 * @param point
+	 * @return
+	 */
+	public static boolean isPtOnPlane(double[] plane, Point3D point) {
+		if (plane[0] * point.getX()+ plane[1] * point.getY() + plane[2] * point.getZ() + plane[3] == 0)
+			return true;
+		if (pointPlaneDist(plane, point) <= tol)
+			return true;
+		return false;
 	}
 	
 	/**
@@ -130,7 +145,7 @@ public class Computations {
 	 * @param vector
 	 * @return
 	 */
-	public static double[] noramlize(double[] vector) {
+	public static double[] normalize(double[] vector) {
 		double[] unitV = new double[vector.length];
 		double mag = magnitude(vector);
 		for (int i = 0; i < vector.length; i++)
@@ -231,6 +246,7 @@ public class Computations {
 			vector[i] *= size;
 		return vector;
 	}
+	
 	/**
 	 * Returns the slope of a vector in (x, y)
 	 * @param vector
