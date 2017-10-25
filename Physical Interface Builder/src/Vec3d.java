@@ -1,3 +1,4 @@
+import java.util.Arrays;
 
 /**
  * This class is modified and extended version of Vector.java linked below:
@@ -22,7 +23,7 @@ public class Vec3d {
 	 * Creates the zero vector in 3d
 	 */
 	public Vec3d() {
-		this.arr = new double[3];
+		this(new double[] { 0, 0, 0 });
 	}
 
 	/**
@@ -36,7 +37,7 @@ public class Vec3d {
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		arr = new double[] { x, y, z };
+		this.arr = new double[] { x, y, z };
 	}
 
 	/**
@@ -49,25 +50,6 @@ public class Vec3d {
 		this.x = arr[0];
 		this.y = arr[1];
 		this.z = arr[2];
-	}
-
-	/**
-	 * return the Euclidean distance between this and that
-	 * 
-	 * @param that
-	 * @return
-	 */
-	public double distanceTo(Vec3d that) {
-		return this.subtract(that).magnitude();
-	}
-
-	/**
-	 * Returns the Euclidean norm of this vector
-	 * 
-	 * @return
-	 */
-	public double magnitude() {
-		return Math.sqrt(this.dot(this));
 	}
 
 	/**
@@ -104,24 +86,6 @@ public class Vec3d {
 	}
 
 	/**
-	 * Normalizes this vector to a unit length of 1
-	 * 
-	 * @return
-	 */
-	public Vec3d normalize() {
-		return this.scale(1.0 / magnitude());
-	}
-
-	/**
-	 * Returns the slope of this vector in (x, y)
-	 * 
-	 * @return
-	 */
-	public double slope() {
-		return (double) arr[1] / arr[0];
-	}
-
-	/**
 	 * Returns the dot product of this vector and that vector
 	 * 
 	 * @param that
@@ -135,25 +99,44 @@ public class Vec3d {
 	}
 
 	/**
-	 * Returns cross product between two vectors in 3d
+	 * Returns the cross product of this vector and that vector
 	 * 
 	 * @param that
 	 * @return
 	 */
-	public double[] cross(double[] that) {
-		if (arr.length != that.length)
-			throw new IllegalArgumentException("Not in the same dimension");
-		double[] rslt = { (arr[1] * that[2] - arr[2] * that[1]), // yz - zy
-				(arr[2] * that[0] - arr[0] * that[2]), // zx - xz
-				(arr[0] * that[1] - arr[1] * that[0]) }; // xy -yx
-		return rslt;
+	public Vec3d cross(Vec3d that) {
+		double[] rslt = { (this.arr[1] * that.arr[2] - this.arr[2] * that.arr[1]), // yz - zy
+				(this.arr[2] * that.arr[0] - this.arr[0] * that.arr[2]), // zx - xz
+				(this.arr[0] * that.arr[1] - this.arr[1] * that.arr[0]) }; // xy -yx
+		return new Vec3d(rslt);
 	}
 
-	public double vectorNorm() {
-		double rslt = 0.0;
-		for (int i = 0; i < arr.length; i++)
-			rslt += Math.pow(arr[i], 2);
-		return Math.sqrt(rslt);
+	/**
+	 * Returns the Euclidean norm of this vector
+	 * 
+	 * @return
+	 */
+	public double magnitude() {
+		return Math.sqrt(this.dot(this));
+	}
+
+	/**
+	 * Returns the Euclidean distance between this and that
+	 * 
+	 * @param that
+	 * @return
+	 */
+	public double distanceTo(Vec3d that) {
+		return this.subtract(that).magnitude();
+	}
+
+	/**
+	 * Normalizes this vector to a unit length of 1
+	 * 
+	 * @return
+	 */
+	public Vec3d normalize() {
+		return this.scale(1.0 / magnitude());
 	}
 
 	/**
@@ -199,6 +182,37 @@ public class Vec3d {
 	 */
 	public void setZ(double z) {
 		this.z = z;
+	}
+
+	/**
+	 * @return the arr
+	 */
+	public double[] getArr() {
+		return arr;
+	}
+
+	/**
+	 * @param arr
+	 *            the arr to set
+	 */
+	public void setArr(double[] arr) {
+		this.arr = arr;
+	}
+
+	public boolean sameValue(Vec3d that) {
+//		System.out.println(Arrays.toString(this.arr));
+//		System.out.println(Arrays.toString(that.arr));
+		return Arrays.equals(this.arr, that.arr);
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("(");
+		sb.append(this.x).append(", ");
+		sb.append(this.y).append(", ");
+		sb.append(this.z);
+		sb.append(")");
+		return sb.toString();
 	}
 
 }
