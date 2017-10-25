@@ -16,30 +16,30 @@ public class Computations {
 
 	// BodyFrame.FloorClipPlane.
 
-	/**
-	 * Calculates the distance between a point and a plane in 3D
-	 * 
-	 * @param plane
-	 * @param point
-	 * @return
-	 */
-	public static double pointPlaneDist(double[] plane, Point3D point) {
-		// (a, b, c) components are a unit vector indicating the normal of the plane
-		double a = plane[0];
-		double b = plane[1];
-		double c = plane[2];
-
-		// w is the distance from the plane to the origin in meters
-		double w = plane[3];
-
-		double x = point.getX();
-		double y = point.getY();
-		double z = point.getZ();
-
-		// projecting w onto v is operated by formula below
-		return Math.abs(a * x + b * y + c * z + w) / Math.sqrt(a * a + b * b + c * c);
-
-	}
+//	/**
+//	 * Calculates the distance between a point and a plane in 3D
+//	 * 
+//	 * @param plane
+//	 * @param point
+//	 * @return
+//	 */
+//	public static double pointPlaneDist(double[] plane, Vec3d point) {
+//		// (a, b, c) components are a unit vector indicating the normal of the plane
+//		double a = plane[0];
+//		double b = plane[1];
+//		double c = plane[2];
+//
+//		// w is the distance from the plane to the origin in meters
+//		double w = plane[3];
+//
+//		double x = point.getX();
+//		double y = point.getY();
+//		double z = point.getZ();
+//
+//		// projecting w onto v is operated by formula below
+//		return Math.abs(a * x + b * y + c * z + w) / Math.sqrt(a * a + b * b + c * c);
+//
+//	}
 
 	/**
 	 * Uses an iterative method called RANSAC to pick up a plane that fits as many
@@ -48,7 +48,7 @@ public class Computations {
 	 * @param points
 	 * @return
 	 */
-	public static double[] planeDetection(ArrayList<Point3D> points) {
+	public static double[] planeDetection(ArrayList<Vec3d> points) {
 		if (points == null || points.size() == 0)
 			return null;
 
@@ -61,9 +61,9 @@ public class Computations {
 		// Pick several points at random.
 		Random ran = new Random();
 
-		Point3D p1;
-		Point3D p2;
-		Point3D p3;
+		Vec3d p1;
+		Vec3d p2;
+		Vec3d p3;
 		double[] plane = new double[4];
 		double[] tempPlane = new double[4];
 		
@@ -81,7 +81,7 @@ public class Computations {
 
 			// Check if each other point lies on the plane
 			for (int i = 0; i < size; i++) {
-				Point3D tempPoint = points.get(i);
+				Vec3d tempPoint = points.get(i);
 				if (pointPlaneDist(plane, tempPoint) <= tol)
 					numFits++;
 			}
@@ -93,19 +93,19 @@ public class Computations {
 		return plane;
 	}
 
-	/**
-	 * Finds the projection of a point on a plane
-	 * @param plane - defined by norm 
-	 * @param planePoint - point on the plane
-	 * @param projPoint - point to be projected
-	 * @return
-	 */
-	public static Point3D ptProjOnPlane(double[] plane, Point3D planePt, Point3D projPt) {
-		double[] norm = normalize(new double[] {plane[0], plane[1], plane[2]});
-		double resize = dot(subtract(projPt.inArr(), planePt.inArr()), norm);
-		double[] rslt = subtract(projPt.inArr(), resizeVector(norm, resize));
-		return new Point3D(rslt);
-	}
+//	/**
+//	 * Finds the projection of a point on a plane
+//	 * @param plane - defined by norm 
+//	 * @param planePoint - point on the plane
+//	 * @param projPoint - point to be projected
+//	 * @return
+//	 */
+//	public static Vec3d ptProjOnPlane(double[] plane, Vec3d planePt, Vec3d projPt) {
+//		double[] norm = normalize(new double[] {plane[0], plane[1], plane[2]});
+//		double resize = dot(subtract(projPt.inArr(), planePt.inArr()), norm);
+//		double[] rslt = subtract(projPt.inArr(), resizeVector(norm, resize));
+//		return new Vec3d(rslt);
+//	}
 	
 	/**
 	 * Checks if the point is on the plane
@@ -114,7 +114,7 @@ public class Computations {
 	 * @param point
 	 * @return
 	 */
-	public static boolean isPtOnPlane(double[] plane, Point3D point) {
+	public static boolean isPtOnPlane(double[] plane, Vec3d point) {
 		if (plane[0] * point.getX()+ plane[1] * point.getY() + plane[2] * point.getZ() + plane[3] == 0)
 			return true;
 		if (pointPlaneDist(plane, point) <= tol)
@@ -153,7 +153,7 @@ public class Computations {
 		return unitV;
 	}
 
-	public static boolean collinear3dPoints(Point3D p1, Point3D p2, Point3D p3) {
+	public static boolean collinear3dPoints(Vec3d p1, Vec3d p2, Vec3d p3) {
 		double area = p1.getX() * (p2.getY() - p3.getY()) + p2.getX() * (p3.getY() - p1.getY())
 				+ p3.getX() * (p1.getY() - p2.getY());
 		return (area == 0);
@@ -176,7 +176,7 @@ public class Computations {
 	 * @param p3
 	 * @return
 	 */
-	public static double[] plotPlane(Point3D p1, Point3D p2, Point3D p3) {
+	public static double[] plotPlane(Vec3d p1, Vec3d p2, Vec3d p3) {
 		double[] v1 = subtract(p2.inArr(), p1.inArr()); // a vector goes from p1 to p2
 		double[] v2 = subtract(p3.inArr(), p1.inArr()); // a vector goes from p1 to p3
 		double[] cp = cross3(v1, v2); // cross product of two vectors
@@ -188,72 +188,65 @@ public class Computations {
 		return plane;
 	}
 
-	public static double vectorNorm(double[] vector) {
-		double rslt = 0.0;
-		for (int i = 0; i < vector.length; i++)
-			rslt += Math.pow(vector[i], 2);
-		return Math.sqrt(rslt);
-	}
+//	public static double vectorNorm(double[] vector) {
+//		double rslt = 0.0;
+//		for (int i = 0; i < vector.length; i++)
+//			rslt += Math.pow(vector[i], 2);
+//		return Math.sqrt(rslt);
+//	}
 
-	/**
-	 * Returns dot product of two vectors in any number of dimensions
-	 * 
-	 * @param v1
-	 * @param v2
-	 * @return
-	 */
-	public static double dot(double[] v1, double[] v2) {
-		if (v1.length != v2.length)
-			throw new IllegalArgumentException("Not in the same dimension");
-		double rslt = 0.0;
-		for (int i = 0; i < v1.length; i++)
-			rslt += v1[i] * v2[i];
-		return rslt;
-	}
+//	/**
+//	 * Returns dot product of two vectors in any number of dimensions
+//	 * 
+//	 * @param v1
+//	 * @param v2
+//	 * @return
+//	 */
+//	public static double dot(double[] v1, double[] v2) {
+//		if (v1.length != v2.length)
+//			throw new IllegalArgumentException("Not in the same dimension");
+//		double rslt = 0.0;
+//		for (int i = 0; i < v1.length; i++)
+//			rslt += v1[i] * v2[i];
+//		return rslt;
+//	}
 
-	/**
-	 * Returns cross product between two vectors in 3D
-	 * @param v1
-	 * @param v2
-	 * @return
-	 */
-	public static double[] cross3(double[] v1, double[] v2) {
-		if (v1.length != v2.length)
-			throw new IllegalArgumentException("Not in the same dimension");
-		double[] rslt = { (v1[1] * v2[2] - v1[2] * v2[1]), // yz - zy
-				(v1[2] * v2[0] - v1[0] * v2[2]), // zx - xz
-				(v1[0] * v2[1] - v1[1] * v2[0]) }; // xy -yx
-		return rslt;
-	}
+//	/**
+//	 * Returns cross product between two vectors in 3D
+//	 * @param v1
+//	 * @param v2
+//	 * @return
+//	 */
+//	public static double[] cross3(double[] v1, double[] v2) {
+//		if (v1.length != v2.length)
+//			throw new IllegalArgumentException("Not in the same dimension");
+//		double[] rslt = { (v1[1] * v2[2] - v1[2] * v2[1]), // yz - zy
+//				(v1[2] * v2[0] - v1[0] * v2[2]), // zx - xz
+//				(v1[0] * v2[1] - v1[1] * v2[0]) }; // xy -yx
+//		return rslt;
+//	}
 
-	/**
-	 * Subtracts vector v2 from vector v1
-	 * @param v1
-	 * @param v2
-	 * @return
-	 */
-	public static double[] subtract(double[] v1, double[] v2) {
-		if (v1.length != v2.length)
-			throw new IllegalArgumentException("Not in the same dimension");
-		double[] rslt = new double[v1.length];
-		for (int i = 0; i < v1.length; i++)
-			rslt[i] = v1[i] - v2[i];
-		return rslt;
-	}
+//	/**
+//	 * Subtracts vector v2 from vector v1
+//	 * @param v1
+//	 * @param v2
+//	 * @return
+//	 */
+//	public static double[] subtract(double[] v1, double[] v2) {
+//		if (v1.length != v2.length)
+//			throw new IllegalArgumentException("Not in the same dimension");
+//		double[] rslt = new double[v1.length];
+//		for (int i = 0; i < v1.length; i++)
+//			rslt[i] = v1[i] - v2[i];
+//		return rslt;
+//	}
 
-	public static double[] resizeVector(double[] vector, double size)	{
-		for (int i = 0; i < vector.length; i++)
-			vector[i] *= size;
-		return vector;
-	}
+//	public static double[] resizeVector(double[] vector, double size)	{
+//		for (int i = 0; i < vector.length; i++)
+//			vector[i] *= size;
+//		return vector;
+//	}
 	
-	/**
-	 * Returns the slope of a vector in (x, y)
-	 * @param vector
-	 * @return
-	 */
-	public static double slope(double[] vector) {
-		return (double) vector[1] / vector[0];
-	}
+
 
 }
