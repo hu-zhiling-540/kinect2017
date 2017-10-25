@@ -15,9 +15,9 @@ class Vec3dTest {
 
 	@Test
 	void testConstructors() {
-		assertEquals("(0.0, 0.0, 0.0)", new Vec3d().toString());
-		assertEquals("(1.0, 1.0, 1.0)", v2.toString());
-		assertEquals("(1.0, 2.0, 3.0)", v3.toString());
+		assertEquals("[0.0, 0.0, 0.0]", new Vec3d().toString());
+		assertEquals("[1.0, 1.0, 1.0]", v2.toString());
+		assertEquals("[1.0, 2.0, 3.0]", v3.toString());
 	}
 
 	@Test
@@ -31,7 +31,7 @@ class Vec3dTest {
 	@Test
 	void testSubtract() {
 		assertTrue(v2.sameValue(v2.subtract(v1)));
-		assertEquals("(-1.0, -1.0, -1.0)", v1.subtract(v2).toString());
+		assertEquals("[-1.0, -1.0, -1.0]", v1.subtract(v2).toString());
 	}
 
 	@Test
@@ -66,12 +66,20 @@ class Vec3dTest {
 		assertEquals((double) Math.sqrt(1 / 3d), v5.magnitude());
 	}
 
+	// @Test
+	// void testDistanceTo() {
+	// assertEquals(0, v2.distanceTo(v2));
+	// assertEquals((double) Math.sqrt(3), v1.distanceTo(v2));
+	// assertEquals((double) Math.sqrt(48), v4.distanceTo(v6));
+	// assertEquals(v2.distanceTo(v6), v6.distanceTo(v2));
+	// }
+
 	@Test
-	void testDistanceTo() {
-		assertEquals(0, v2.distanceTo(v2));
-		assertEquals((double) Math.sqrt(3), v1.distanceTo(v2));
-		assertEquals((double) Math.sqrt(48), v4.distanceTo(v6));
-		assertEquals(v2.distanceTo(v6), v6.distanceTo(v2));
+	void projOn() {
+		assertTrue(v1.sameValue(v2.projOn(v1)));
+		assertTrue(v6.sameValue(v6.projOn(v4)));
+		assertTrue(v3.sameValue(v3.projOn(v3)));
+		assertEquals("[-1.0, -0.0, -0.0]", v6.projOn(v7).toString());
 	}
 
 	@Test

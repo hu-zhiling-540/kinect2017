@@ -23,7 +23,7 @@ public class Vec3d {
 	 * Creates the zero vector in 3d
 	 */
 	public Vec3d() {
-		this(new double[] { 0, 0, 0 });
+		this(0, 0, 0);
 	}
 
 	/**
@@ -63,6 +63,10 @@ public class Vec3d {
 		for (int i = 0; i < 3; i++)
 			rslt[i] = this.arr[i] + that.arr[i];
 		return new Vec3d(rslt);
+	}
+	
+	public Boolean isPerpendicular(Vec3d that) {
+		return this.dot(that) == 0;
 	}
 
 	/**
@@ -120,14 +124,17 @@ public class Vec3d {
 		return Math.sqrt(this.dot(this));
 	}
 
-	/**
-	 * Returns the Euclidean distance between this and that
-	 * 
-	 * @param that
-	 * @return
-	 */
-	public double distanceTo(Vec3d that) {
-		return this.subtract(that).magnitude();
+//	public double distanceTo(Point3d that) {
+//		return this.subtract(that).magnitude();
+//	}
+	
+	public Vec3d projOn(Vec3d that) {
+		if (this.isPerpendicular(that))
+			return ZERO_V3;
+		double dot = this.dot(that);
+		dot /= Math.pow(that.magnitude(), 2);
+//		System.out.println(that.scale(dot));
+		return that.scale(dot);
 	}
 
 	/**
@@ -207,11 +214,11 @@ public class Vec3d {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("(");
+		sb.append("[");
 		sb.append(this.x).append(", ");
 		sb.append(this.y).append(", ");
 		sb.append(this.z);
-		sb.append(")");
+		sb.append("]");
 		return sb.toString();
 	}
 
