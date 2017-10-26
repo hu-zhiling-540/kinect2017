@@ -1,23 +1,41 @@
+import java.util.Arrays;
 
 public class Point3d extends Vec3d {
 
 	private double x;
 	private double y;
 	private double z;
-	private double[] arr; // array of vector's components
+	private double[] arr = new double[3]; // array of vector's components
 
 	private final int len = 3; // length of the vector
 
 	public Point3d() {
-		super(0, 0, 0);
+		this(0, 0, 0);
 	}
 
 	public Point3d(double x, double y, double z) {
-		super(x, y, z);
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.arr = new double[] { x, y, z };
 	}
 
 	public Point3d(double[] arr) {
 		super(arr);
+	}
+
+	/**
+	 * Returns a vector from this point to that point
+	 * 
+	 * @param that
+	 *            endpoint
+	 * @return
+	 */
+	public Vec3d subtract(Point3d that) {
+		double[] rslt = new double[3];
+		for (int i = 0; i < 3; i++)
+			rslt[i] = this.arr[i] - that.arr[i];
+		return new Vec3d(rslt);
 	}
 
 	@Override
@@ -38,6 +56,37 @@ public class Point3d extends Vec3d {
 	 * @return
 	 */
 	public double distanceTo(Point3d that) {
-		return this.subtract(that).magnitude();
+		return Math.abs(this.subtract(that).magnitude());
 	}
+
+	/**
+	 * Reflects the point at the origin without changing the original point.
+	 * 
+	 * @return the resulting reflected point
+	 */
+	public Point3d reflectOrigin() {
+		return new Point3d(-1 * this.x, -1 * this.y, -1 * this.z);
+	}
+
+	/**
+	 * Returns true if two three points are collinear by checking two vectors
+	 * between points are collinear
+	 * 
+	 * @param p1
+	 * @param p2
+	 * @return
+	 */
+	public boolean collinear(Point3d p1, Point3d p2) {
+		Vec3d v1 = p1.subtract(this);// a vector from this to p1
+		Vec3d v2 = p2.subtract(this);// a vector from this to p2
+		return v1.collinear(v2);
+	}
+
+	// public static boolean collinear3dPoints(Vec3d p1, Vec3d p2, Vec3d p3) {
+	// double area = p1.getX() * (p2.getY() - p3.getY()) + p2.getX() * (p3.getY() -
+	// p1.getY())
+	// + p3.getX() * (p1.getY() - p2.getY());
+	// return (area == 0);
+	//
+	// }
 }
