@@ -109,52 +109,52 @@ public class Computations {
 	// return new Vec3d(rslt);
 	// }
 
-	/**
-	 * Checks if the point is on the plane In order for a point (x,y,z) to be in the
-	 * plane, it must satisfy Ax+By+Cz+d=0".
-	 * 
-	 * @param plane
-	 * @param point
-	 * @return
-	 */
-	public static boolean isPtOnPlane(double[] plane, Vec3d point) {
-		if (plane[0] * point.getX() + plane[1] * point.getY() + plane[2] * point.getZ() + plane[3] == 0)
-			return true;
-		if (pointPlaneDist(plane, point) <= tol)
-			return true;
-		return false;
-	}
+//	/**
+//	 * Checks if the point is on the plane In order for a point (x,y,z) to be in the
+//	 * plane, it must satisfy Ax+By+Cz+d=0".
+//	 * 
+//	 * @param plane
+//	 * @param point
+//	 * @return
+//	 */
+//	public static boolean isPtOnPlane(double[] plane, Vec3d point) {
+//		if (plane[0] * point.getX() + plane[1] * point.getY() + plane[2] * point.getZ() + plane[3] == 0)
+//			return true;
+//		if (pointPlaneDist(plane, point) <= tol)
+//			return true;
+//		return false;
+//	}
+//
+//	/**
+//	 * L^2-Norm, i.e: the magnitude
+//	 * 
+//	 * @param vector
+//	 * @return
+//	 */
+//	public static double magnitude(double[] vector) {
+//		double mag = 0.0;
+//
+//		for (int i = 0; i < vector.length; i++) {
+//			mag += Math.pow(vector[i], 2);
+//		}
+//		return Math.sqrt(mag);
+//	}
 
-	/**
-	 * L^2-Norm, i.e: the magnitude
-	 * 
-	 * @param vector
-	 * @return
-	 */
-	public static double magnitude(double[] vector) {
-		double mag = 0.0;
-
-		for (int i = 0; i < vector.length; i++) {
-			mag += Math.pow(vector[i], 2);
-		}
-		return Math.sqrt(mag);
-	}
-
-	/**
-	 * To normalize a vector is to keep the pointing in the same direction, while
-	 * change its length to 1 --> a unit vector. Calc: simply divide each component
-	 * by its magnitude
-	 * 
-	 * @param vector
-	 * @return
-	 */
-	public static double[] normalize(double[] vector) {
-		double[] unitV = new double[vector.length];
-		double mag = magnitude(vector);
-		for (int i = 0; i < vector.length; i++)
-			unitV[i] = vector[i] / mag;
-		return unitV;
-	}
+//	/**
+//	 * To normalize a vector is to keep the pointing in the same direction, while
+//	 * change its length to 1 --> a unit vector. Calc: simply divide each component
+//	 * by its magnitude
+//	 * 
+//	 * @param vector
+//	 * @return
+//	 */
+//	public static double[] normalize(double[] vector) {
+//		double[] unitV = new double[vector.length];
+//		double mag = magnitude(vector);
+//		for (int i = 0; i < vector.length; i++)
+//			unitV[i] = vector[i] / mag;
+//		return unitV;
+//	}
 
 //	public static boolean collinear3dPoints(Vec3d p1, Vec3d p2, Vec3d p3) {
 //		double area = p1.getX() * (p2.getY() - p3.getY()) + p2.getX() * (p3.getY() - p1.getY())
