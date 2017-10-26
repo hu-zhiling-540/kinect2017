@@ -12,7 +12,7 @@ public class Vec3d {
 	private double x;
 	private double y;
 	private double z;
-	private double[] arr; // array of vector's components
+	private double[] arr = new double[3]; // array of vector's components
 
 	private final int len = 3; // length of the vector
 
@@ -64,10 +64,6 @@ public class Vec3d {
 			rslt[i] = this.arr[i] + that.arr[i];
 		return new Vec3d(rslt);
 	}
-	
-	public Boolean isPerpendicular(Vec3d that) {
-		return this.dot(that) == 0;
-	}
 
 	/**
 	 * Subtracts that vector from this vector
@@ -115,6 +111,10 @@ public class Vec3d {
 		return new Vec3d(rslt);
 	}
 
+	public Boolean isPerpendicular(Vec3d that) {
+		return this.dot(that) == 0;
+	}
+
 	/**
 	 * Returns the Euclidean norm of this vector
 	 * 
@@ -124,18 +124,9 @@ public class Vec3d {
 		return Math.sqrt(this.dot(this));
 	}
 
-//	public double distanceTo(Point3d that) {
-//		return this.subtract(that).magnitude();
-//	}
-	
-	public Vec3d projOn(Vec3d that) {
-		if (this.isPerpendicular(that))
-			return ZERO_V3;
-		double dot = this.dot(that);
-		dot /= Math.pow(that.magnitude(), 2);
-//		System.out.println(that.scale(dot));
-		return that.scale(dot);
-	}
+	// public double distanceTo(Point3d that) {
+	// return this.subtract(that).magnitude();
+	// }
 
 	/**
 	 * Normalizes this vector to a unit length of 1
@@ -144,6 +135,25 @@ public class Vec3d {
 	 */
 	public Vec3d normalize() {
 		return this.scale(1.0 / magnitude());
+	}
+
+	public Vec3d projOn(Vec3d that) {
+		if (this.isPerpendicular(that))
+			return ZERO_V3;
+		double dot = this.dot(that);
+		dot /= Math.pow(that.magnitude(), 2);
+		// System.out.println(that.scale(dot));
+		return that.scale(dot);
+	}
+
+	/**
+	 * Checks if cross product of two vectors is zero
+	 * 
+	 * @param that
+	 * @return
+	 */
+	public boolean collinear(Vec3d that) {
+		return this.cross(that).sameValue(ZERO_V3);
 	}
 
 	/**
@@ -206,9 +216,15 @@ public class Vec3d {
 		this.arr = arr;
 	}
 
+	/**
+	 * Checks if this and that vectors hold same value
+	 * 
+	 * @param that
+	 * @return
+	 */
 	public boolean sameValue(Vec3d that) {
-//		System.out.println(Arrays.toString(this.arr));
-//		System.out.println(Arrays.toString(that.arr));
+		// System.out.println(Arrays.toString(this.arr));
+		// System.out.println(Arrays.toString(that.arr));
 		return Arrays.equals(this.arr, that.arr);
 	}
 
