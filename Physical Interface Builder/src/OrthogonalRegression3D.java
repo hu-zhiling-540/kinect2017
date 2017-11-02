@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
@@ -33,12 +35,11 @@ public class OrthogonalRegression3D {
 	 * @param points
 	 *            the set of points
 	 */
-	public OrthogonalRegression3D(Collection<Point3d> points) {
+	public OrthogonalRegression3D(ArrayList<Point3d> points) {
 		// compute centroid of points (and check input data)
 		double[] cCoord = new double[] { 0.0, 0.0, 0.0 };
 		int n = 0;
 		for (Point3d obj : points) {
-			// double[] coord = ((Point3d) obj).getCoordinates();
 			double[] coord = obj.getArr();
 			cCoord[0] += coord[0];
 			cCoord[1] += coord[1];
@@ -54,15 +55,24 @@ public class OrthogonalRegression3D {
 		M = new Matrix(n, 3);
 		int i = 0;
 		for (Point3d obj : points) {
-			// double[] coord = ((Point3d) obj).getCoordinates();
 			double[] coord = obj.getArr();
 			M.set(i, 0, coord[0] - cCoord[0]);
 			M.set(i, 1, coord[1] - cCoord[1]);
 			M.set(i, 2, coord[2] - cCoord[2]);
 			i++;
 		}
-
+		System.out.println(strung(M));
 		svd = null;
+	}
+
+	public static String strung(Matrix m) {
+		StringBuffer sb = new StringBuffer();
+		for (int r = 0; r < m.getRowDimension(); ++r) {
+			for (int c = 0; c < m.getColumnDimension(); ++c)
+				sb.append(m.get(r, c)).append("\t");
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	/**
@@ -144,7 +154,7 @@ public class OrthogonalRegression3D {
 
 		// right-singular vector (of smallest singular value) is the normal vector of
 		// the plane
-		Point3d normalVector = new Point3d(V.getMatrix(0, 2, r - 1, r - 1).getColumnPackedCopy());
+		Vec3d normalVector = new Point3d(V.getMatrix(0, 2, r - 1, r - 1).getColumnPackedCopy());
 
 		// centroid lies on the plane, use this to construct distance to origin
 		// double distance = normalVector.getScalarProduct(c);
@@ -153,6 +163,7 @@ public class OrthogonalRegression3D {
 		// parameterization of our plane requires d to be non-negative
 		if (distance < 0.0) {
 			normalVector = normalVector.reflectOrigin();
+			System.out.println(normalVector.toString());
 			distance = -distance;
 		}
 

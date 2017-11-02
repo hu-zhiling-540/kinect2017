@@ -124,7 +124,7 @@ public class Plane3d {
 	 * @param points
 	 * @return
 	 */
-	public static Plane3d planeDetection(ArrayList<Point3d> points, double tol, double percent) {
+	public static Plane3d ransacPlane(ArrayList<Point3d> points, double tol, double percent) {
 		if (points == null || points.size() == 0)
 			return null;
 
@@ -209,6 +209,11 @@ public class Plane3d {
 	 */
 	public void transform(Quat quat) {
 
+	}
+
+	public String toString() {
+		String str = a + "x" + " + " + b + " y " + c + " z " + " = " + d;
+		return str;
 	}
 
 }

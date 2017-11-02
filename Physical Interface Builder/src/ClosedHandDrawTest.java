@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import processing.core.PApplet;
 import processing.core.PVector;
@@ -87,15 +88,17 @@ public class ClosedHandDrawTest extends PApplet {
 			p.update(b);
 			drawingCmd(p);
 		}
+		
 		if (isDrawing) {
 			int color = color(0, 255, 255);
 			fill(color);
 			strokeWeight(.1f);
 			Body drawer = tracks.get(drawerId).body;
-			// PVector handLeft = drawer.getJoint(Body.HAND_LEFT);
 			PVector handRight = drawer.getJoint(Body.HAND_RIGHT);
-			// drawIfValid(handLeft);
 			drawIfValid(handRight);
+			if (handRight != null) {
+				marks.add(new Point3d(handRight.x, handRight.y, handRight.z));
+			}
 		}
 	}
 
@@ -120,7 +123,7 @@ public class ClosedHandDrawTest extends PApplet {
 			}
 			// in drawing
 			else {
-				// track the drawing person
+				// keep track of the drawing person
 				if (id == drawerId) {
 					if (!bd.rightHandOpen)
 						stopDrawing();
@@ -136,8 +139,26 @@ public class ClosedHandDrawTest extends PApplet {
 	}
 
 	public void stopDrawing() {
+		List<Point3d> copy = new ArrayList<>(marks);
+		marks = new ArrayList<Point3d>();
 		isDrawing = false;
 		System.out.println("Stop Drawing");
+//		System.out.println(copy.size());
+//		System.out.println(copy.toString());
+		OrthogonalRegression3D or = new OrthogonalRegression3D((ArrayList<Point3d>) copy);
+		// or.fitPlane();
+		try {
+			Plane3d plane = or.fitPlane(1.0);
+			// Plane3d plane = planeDetection(marks, 0.05, 0.6);
+			if (plane != null) {
+				System.out.println("Finished" + plane.toString());
+			}
+		} catch (
+
+		IllegalArgumentException e) {
+			
+		}
+
 	}
 
 	// public void addPath(Boolean isDrawing) {

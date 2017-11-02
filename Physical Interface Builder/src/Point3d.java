@@ -60,15 +60,6 @@ public class Point3d extends Vec3d {
 	}
 
 	/**
-	 * Reflects the point at the origin without changing the original point.
-	 * 
-	 * @return the resulting reflected point
-	 */
-	public Point3d reflectOrigin() {
-		return new Point3d(-1 * this.x, -1 * this.y, -1 * this.z);
-	}
-
-	/**
 	 * Returns true if two three points are collinear by checking two vectors
 	 * between points are collinear
 	 * 
@@ -82,6 +73,12 @@ public class Point3d extends Vec3d {
 		return v1.collinear(v2);
 	}
 
+	/**
+	 * @return the arr
+	 */
+	public double[] getArr() {
+		return arr;
+	}
 	// public static boolean collinear3dPoints(Vec3d p1, Vec3d p2, Vec3d p3) {
 	// double area = p1.getX() * (p2.getY() - p3.getY()) + p2.getX() * (p3.getY() -
 	// p1.getY())

@@ -147,6 +147,15 @@ public class Vec3d {
 	}
 
 	/**
+	 * Reflects the point at the origin without changing the original point.
+	 * 
+	 * @return the resulting reflected point
+	 */
+	public Point3d reflectOrigin() {
+		return new Point3d(-1 * this.x, -1 * this.y, -1 * this.z);
+	}
+
+	/**
 	 * Checks if cross product of two vectors is zero
 	 * 
 	 * @param that
