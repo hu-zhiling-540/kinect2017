@@ -36,6 +36,8 @@ public class Body {
 	public static final String THUMB_RIGHT = "ThumbRight";
 	public static final String WRIST_LEFT = "WristLeft";
 	public static final String WRIST_RIGHT = "WristRight";
+	public static final String LEFT_HAND_STATE = "HandLeftState";
+	public static final String RIGHT_HAND_STATE = "HandRightState";
 
 	JSONObject bodyData;
 	JSONObject joints;
@@ -50,47 +52,41 @@ public class Body {
 		isTracked = bodyData.getBoolean("IsTracked");
 		id = bodyData.getLong("TrackingId");
 		if (isTracked) {
-			leftHandState();
-			rightHandState();
+			leftHandOpen = leftHandState();
+			leftHandOpen = rightHandState();
 			joints = bodyData.getJSONObject("Joints");
 			jointOrientations = bodyData.getJSONObject("JointOrientations");
 		}
 	}
 
-	public void leftHandState() {
-		int state = bodyData.getInt("HandLeftState");
+	public boolean leftHandState() {
+		int state = bodyData.getInt(LEFT_HAND_STATE);
 		switch (state) {
-		case 0:// 0 unknown
-			break;
-		case 1:// 1 not tracked
-			break;
-		case 2:// 2 open
+		case 2: // 2 open
 			leftHandOpen = true;
 			break;
-		case 3:// 3 closed
+		case 3: // 3 closed
 			leftHandOpen = false;
 			break;
-		case 4: // 4 lasso
+		default: // 0 unknown, 1 not tracked, 4 lasso
 			break;
 		}
+		return leftHandOpen;
 	}
 
-	public void rightHandState() {
-		int state = bodyData.getInt("HandRightState");
+	public boolean rightHandState() {
+		int state = bodyData.getInt(RIGHT_HAND_STATE);
 		switch (state) {
-		case 0:// 0 unknown
-			break;
-		case 1:// 1 not tracked
-			break;
-		case 2:// 2 open
+		case 2: // 2 open
 			rightHandOpen = true;
 			break;
-		case 3:// 3 closed
+		case 3: // 3 closed
 			rightHandOpen = false;
 			break;
-		case 4: // 4 lasso
+		default: // 0 unknown, 1 not tracked, 4 lasso
 			break;
 		}
+		return rightHandOpen;
 	}
 
 	/**
