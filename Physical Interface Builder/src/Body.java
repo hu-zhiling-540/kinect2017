@@ -50,49 +50,47 @@ public class Body {
 		isTracked = bodyData.getBoolean("IsTracked");
 		id = bodyData.getLong("TrackingId");
 		if (isTracked) {
-			leftHandOpen = leftHandState();
-			rightHandOpen = rightHandState();
+			leftHandState();
+			rightHandState();
 			joints = bodyData.getJSONObject("Joints");
 			jointOrientations = bodyData.getJSONObject("JointOrientations");
 		}
 	}
 
-	public Boolean leftHandState() {
+	public void leftHandState() {
 		int state = bodyData.getInt("HandLeftState");
-		if (state == 2)
-			return true;
-		if (state == 3)
-			return false;
-		return leftHandOpen;
+		switch (state) {
+		case 0:// 0 unknown
+			break;
+		case 1:// 1 not tracked
+			break;
+		case 2:// 2 open
+			leftHandOpen = true;
+			break;
+		case 3:// 3 closed
+			leftHandOpen = false;
+			break;
+		case 4: // 4 lasso
+			break;
+		}
 	}
 
-	public Boolean rightHandState() {
-		int state = bodyData.getInt("RightLeftState");
-		if (state == 2)
-			return true;
-		if (state == 3)
-			return false;
-		return rightHandOpen;
-	}
-
-	/**
-	 * Sets up hand state for both hands only in terms of open and closed
-	 */
-	public void handState() {
-		if (bodyData.getInt("HandLeftState") == 2)
+	public void rightHandState() {
+		int state = bodyData.getInt("HandRightState");
+		switch (state) {
+		case 0:// 0 unknown
+			break;
+		case 1:// 1 not tracked
+			break;
+		case 2:// 2 open
 			rightHandOpen = true;
-		if (bodyData.getInt("HandLeftState") == 3)
+			break;
+		case 3:// 3 closed
 			rightHandOpen = false;
-		if (bodyData.getInt("HandRightState") == 2)
-			rightHandOpen = true;
-		if (bodyData.getInt("HandRightState") == 3)
-			rightHandOpen = false;
-
-		// 0 unknown
-		// 1 not tracked
-		// 2 open
-		// 3 closed
-		// 4 lasso
+			break;
+		case 4: // 4 lasso
+			break;
+		}
 	}
 
 	/**
@@ -136,11 +134,41 @@ public class Body {
 	 * @param jointName
 	 * @return returns a vector representing the joint'ss position.
 	 */
-	public PVector getJoint(String jointName) {
+	// public PVector getJoint(String jointName) {
+	// JSONObject joint = joints.getJSONObject(jointName);
+	// if (joint.getInt("TrackingState") == 2) {
+	// JSONObject pos = joint.getJSONObject("Position");
+	// return new PVector(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
+	// } else {
+	// return null;
+	// }
+	// }
+
+	public Point3d getJoint(String jointName) {
 		JSONObject joint = joints.getJSONObject(jointName);
 		if (joint.getInt("TrackingState") == 2) {
 			JSONObject pos = joint.getJSONObject("Position");
-			return new PVector(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
+			return new Point3d(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
+		} else {
+			return null;
+		}
+	}
+
+	public Point3d getLeftHand() {
+		JSONObject leftHand = joints.getJSONObject(HAND_LEFT);
+		if (leftHand.getInt("TrackingState") == 2) {
+			JSONObject pos = leftHand.getJSONObject("Position");
+			return new Point3d(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
+		} else {
+			return null;
+		}
+	}
+
+	public Point3d getRightHand() {
+		JSONObject rightHand = joints.getJSONObject(HAND_LEFT);
+		if (rightHand.getInt("TrackingState") == 2) {
+			JSONObject pos = rightHand.getJSONObject("Position");
+			return new Point3d(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
 		} else {
 			return null;
 		}
