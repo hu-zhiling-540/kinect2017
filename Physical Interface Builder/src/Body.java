@@ -130,25 +130,25 @@ public class Body {
 	 * @param jointName
 	 * @return returns a vector representing the joint'ss position.
 	 */
-	// public PVector getJoint(String jointName) {
-	// JSONObject joint = joints.getJSONObject(jointName);
-	// if (joint.getInt("TrackingState") == 2) {
-	// JSONObject pos = joint.getJSONObject("Position");
-	// return new PVector(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
-	// } else {
-	// return null;
-	// }
-	// }
-
-	public Point3d getJoint(String jointName) {
+	public PVector getJoint(String jointName) {
 		JSONObject joint = joints.getJSONObject(jointName);
 		if (joint.getInt("TrackingState") == 2) {
 			JSONObject pos = joint.getJSONObject("Position");
-			return new Point3d(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
+			return new PVector(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
 		} else {
 			return null;
 		}
 	}
+
+	// public Point3d getJoint(String jointName) {
+	// JSONObject joint = joints.getJSONObject(jointName);
+	// if (joint.getInt("TrackingState") == 2) {
+	// JSONObject pos = joint.getJSONObject("Position");
+	// return new Point3d(pos.getFloat("X"), pos.getFloat("Y"), pos.getFloat("Z"));
+	// } else {
+	// return null;
+	// }
+	// }
 
 	public Point3d getLeftHand() {
 		JSONObject leftHand = joints.getJSONObject(HAND_LEFT);

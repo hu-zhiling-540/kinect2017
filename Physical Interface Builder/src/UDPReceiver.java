@@ -23,6 +23,8 @@ public class UDPReceiver implements Runnable, MsgProvider {
 
 	private int timeOut = 5000;
 
+	int maxPacketSize = 64000;
+
 	// public static final int WIDTH = 1920;
 	// public static final int HEIGHT = 1080;
 
@@ -49,14 +51,12 @@ public class UDPReceiver implements Runnable, MsgProvider {
 			/* buffer is filled with the data received */
 			try {
 				// InetAddress address = InetAddress.getByName("127.0.0.1");
-				byte[] msg = new byte[6000];
+				byte[] msg = new byte[maxPacketSize];
 				packet = new DatagramPacket(msg, msg.length);
 				mySocket.receive(packet);
 
 				receivedMsgs.offer(new Msg(packet.getData(), packet.getLength()), timeOut, TimeUnit.MILLISECONDS);
 
-				// String s= new String(packet.getData(), 0 , packet.getLength());
-				// System.out.println("|"+s+"|" + s.length());
 			} catch (IOException | InterruptedException ioe) {
 				if (isRunning) {
 					ioe.printStackTrace();
