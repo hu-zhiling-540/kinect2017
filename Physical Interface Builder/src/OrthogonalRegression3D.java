@@ -163,7 +163,7 @@ public class OrthogonalRegression3D {
 		// parameterization of our plane requires d to be non-negative
 		if (distance < 0.0) {
 			normalVector = normalVector.reflectOrigin();
-			System.out.println(normalVector.toString());
+//			System.out.println(normalVector.toString());
 			distance = -distance;
 		}
 

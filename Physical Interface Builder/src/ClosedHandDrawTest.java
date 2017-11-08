@@ -4,7 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 
 import processing.core.PApplet;
+import processing.core.PShape;
 import processing.core.PVector;
+import processing.data.JSONArray;
+import processing.data.JSONObject;
 
 public class ClosedHandDrawTest extends PApplet {
 
@@ -22,6 +25,8 @@ public class ClosedHandDrawTest extends PApplet {
 
 	Boolean isDrawing = false;
 	Long drawerId;
+	String trakcingHand = Body.RIGHT_HAND_STATE;
+
 	public static float PROJECTOR_RATIO = 1080f / 1920.0f;
 
 	public void createWindow(boolean useP2D, boolean isFullscreen, float windowsScale) {
@@ -88,7 +93,7 @@ public class ClosedHandDrawTest extends PApplet {
 			p.update(b);
 			drawingCmd(p);
 		}
-		
+
 		if (isDrawing) {
 			int color = color(0, 255, 255);
 			fill(color);
@@ -143,8 +148,8 @@ public class ClosedHandDrawTest extends PApplet {
 		marks = new ArrayList<Point3d>();
 		isDrawing = false;
 		System.out.println("Stop Drawing");
-//		System.out.println(copy.size());
-//		System.out.println(copy.toString());
+		// System.out.println(copy.size());
+		// System.out.println(copy.toString());
 		OrthogonalRegression3D or = new OrthogonalRegression3D((ArrayList<Point3d>) copy);
 		// or.fitPlane();
 		try {
@@ -152,13 +157,30 @@ public class ClosedHandDrawTest extends PApplet {
 			// Plane3d plane = planeDetection(marks, 0.05, 0.6);
 			if (plane != null) {
 				System.out.println("Finished" + plane.toString());
+				noLoop();
 			}
 		} catch (
 
 		IllegalArgumentException e) {
-			
+			e.printStackTrace();
 		}
+	}
 
+	public Plane3d loadPlane(String fileName) {
+		JSONObject json = loadJSONObject(fileName);
+		JSONArray normArr = json.getJSONArray("norm");
+		double[] arr = new double[3];
+		for (int i = 0; i < 3; i++)
+			arr[i] = normArr.getDouble(i);
+		return new Plane3d(new Vec3d(arr), json.getDouble("dist"));
+	}
+
+	public void savePlane(String fileName, Plane3d plane) {
+		JSONObject json = new JSONObject();
+		Vec3d norm = plane.getNorm();
+		json.put("norm", norm.getArr());
+		json.put("dist", plane.getD());
+		saveJSONObject(json, "data/new.json");
 	}
 
 	// public void addPath(Boolean isDrawing) {
@@ -167,6 +189,17 @@ public class ClosedHandDrawTest extends PApplet {
 
 	public void closePath() {
 
+	}
+
+	public void create() {
+		PShape shape = createShape();
+		shape.beginShape();
+		// shape.vertex( 0, 0);
+		// shape.vertex( len * .5, len * .5);
+		// shape.vertex( len, len);
+		// shape.vertex( len * .5, len);
+		// shape.vertex( 0, len);
+		shape.endShape(CLOSE);
 	}
 
 	public static void main(String[] args) {

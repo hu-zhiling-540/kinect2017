@@ -71,6 +71,10 @@ public class Plane3d {
 		this.c = this.norm.getZ();
 
 	}
+	
+	public Vec3d getNorm()	{
+		return this.norm;
+	}
 
 	/**
 	 * Returns signed distance between a point and a plane by inserting point into
@@ -212,7 +216,7 @@ public class Plane3d {
 	}
 
 	public String toString() {
-		String str = a + "x" + " + " + b + " y " + c + " z " + " = " + d;
+		String str = this.a + " x" + " + " + this.b + " y " + " + " + this.c + " z " + " = " + this.d;
 		return str;
 	}
 
