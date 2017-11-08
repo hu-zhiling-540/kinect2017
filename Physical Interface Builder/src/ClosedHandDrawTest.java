@@ -12,53 +12,22 @@ import processing.data.JSONObject;
 public class ClosedHandDrawTest extends PApplet {
 
 	KinectBodyDataProvider kinectReader;
-	KinectBodyData bodyData = new KinectBodyData("");
+	KinectBodyData bodyData;
 
 	Long firstPersonId = null;
 	HashMap<Long, Person> tracks = new HashMap<Long, Person>();
 	PersonTracker tracker = new PersonTracker();
 
 	// default drawing hand
+	String trakcingHand = Body.RIGHT_HAND_STATE;
 	Point3d handRight = new Point3d();
 
 	ArrayList<Point3d> marks = new ArrayList<Point3d>();
 
 	Boolean isDrawing = false;
 	Long drawerId;
-	String trakcingHand = Body.RIGHT_HAND_STATE;
 
 	public static float PROJECTOR_RATIO = 1080f / 1920.0f;
-
-	public void createWindow(boolean useP2D, boolean isFullscreen, float windowsScale) {
-		if (useP2D) {
-			if (isFullscreen) {
-				fullScreen(P2D);
-			} else {
-				size((int) (1920 * windowsScale), (int) (1080 * windowsScale), P2D);
-			}
-		} else {
-			if (isFullscreen) {
-				fullScreen();
-			} else {
-				size((int) (1920 * windowsScale), (int) (1080 * windowsScale));
-			}
-		}
-	}
-	// public ClosedHandDrawTest() {
-	// kinectReader = new KinectBodyDataProvider(8008);
-	// kinectReader.start();
-	// }
-
-	// use lower numbers to zoom out (show more of the world)
-	// zoom of 1 means that the window is 2 meters wide and appox 1 meter tall.
-	public void setScale(float zoom) {
-		scale(zoom * width / 2.0f, zoom * -width / 2.0f);
-		translate(1f / zoom, -PROJECTOR_RATIO / zoom);
-	}
-
-	public void settings() {
-		createWindow(true, true, .5f);
-	}
 
 	public void setup() {
 		try {
@@ -77,8 +46,15 @@ public class ClosedHandDrawTest extends PApplet {
 		// case BLUE:
 		background(173, 216, 230);
 
-		KinectBodyData bodyData = kinectReader.getMostRecentData();
+		bodyData = kinectReader.getMostRecentData();
 		// bodyData = kinectReader.getData();
+
+		update(bodyData);
+		drawing(isDrawing);
+
+	}
+
+	public void update(KinectBodyData bodyData) {
 		tracker.update(bodyData);
 
 		for (Long id : tracker.getEnters()) {
@@ -93,8 +69,12 @@ public class ClosedHandDrawTest extends PApplet {
 			p.update(b);
 			drawingCmd(p);
 		}
+	}
 
-		if (isDrawing) {
+	public void drawing(Boolean isDrawing) {
+		if (isDrawing)
+			return;
+		else {
 			int color = color(0, 255, 255);
 			fill(color);
 			strokeWeight(.1f);
@@ -166,8 +146,8 @@ public class ClosedHandDrawTest extends PApplet {
 		}
 	}
 
-	public Plane3d loadPlane(String fileName) {
-		JSONObject json = loadJSONObject(fileName);
+	public Plane3d loadPlane() {
+		JSONObject json = loadJSONObject("plane.json");
 		JSONArray normArr = json.getJSONArray("norm");
 		double[] arr = new double[3];
 		for (int i = 0; i < 3; i++)
@@ -180,7 +160,7 @@ public class ClosedHandDrawTest extends PApplet {
 		Vec3d norm = plane.getNorm();
 		json.put("norm", norm.getArr());
 		json.put("dist", plane.getD());
-		saveJSONObject(json, "data/new.json");
+		saveJSONObject(json, "plane.json");
 	}
 
 	// public void addPath(Boolean isDrawing) {
@@ -200,6 +180,33 @@ public class ClosedHandDrawTest extends PApplet {
 		// shape.vertex( len * .5, len);
 		// shape.vertex( 0, len);
 		shape.endShape(CLOSE);
+	}
+
+	public void settings() {
+		createWindow(true, true, .5f);
+	}
+
+	public void createWindow(boolean useP2D, boolean isFullscreen, float windowsScale) {
+		if (useP2D) {
+			if (isFullscreen) {
+				fullScreen(P2D);
+			} else {
+				size((int) (1920 * windowsScale), (int) (1080 * windowsScale), P2D);
+			}
+		} else {
+			if (isFullscreen) {
+				fullScreen();
+			} else {
+				size((int) (1920 * windowsScale), (int) (1080 * windowsScale));
+			}
+		}
+	}
+
+	// use lower numbers to zoom out (show more of the world)
+	// zoom of 1 means that the window is 2 meters wide and appox 1 meter tall.
+	public void setScale(float zoom) {
+		scale(zoom * width / 2.0f, zoom * -width / 2.0f);
+		translate(1f / zoom, -PROJECTOR_RATIO / zoom);
 	}
 
 	public static void main(String[] args) {
