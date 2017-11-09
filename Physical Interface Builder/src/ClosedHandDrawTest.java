@@ -166,11 +166,11 @@ public class ClosedHandDrawTest extends PApplet {
 	}
 
 	public void savePlane(String fileName, Plane3d plane) {
-		JSONObject json = new JSONObject();
-		Vec3d norm = plane.getNorm();
-		json.put("norm", norm.getArr());
-		json.put("dist", plane.getD());
-		saveJSONObject(json, "plane.json");
+		// JSONObject json = new JSONObject();
+		// Vec3d norm = plane.getNorm();
+		// json.put("norm", norm.getArr());
+		// json.put("dist", plane.getD());
+		saveJSONObject(plane.serialize(), "plane.json");
 	}
 
 	public Plane3d selectPlane(PVector hand, double tol) {

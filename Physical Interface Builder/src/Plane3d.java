@@ -1,6 +1,9 @@
 import java.util.ArrayList;
 import java.util.Random;
 
+import processing.data.JSONArray;
+import processing.data.JSONObject;
+
 public class Plane3d {
 
 	private double a; // component of the unit norm vector
@@ -205,6 +208,14 @@ public class Plane3d {
 	public void setPlanePt() {
 		double z = (double) d / norm.getZ();
 		this.planePt = new Point3d(0, 0, z);
+	}
+
+	public JSONObject serialize() {
+		JSONObject json = new JSONObject();
+		Vec3d norm = this.getNorm();
+		json.put("norm", norm.getArr());
+		json.put("dist", this.getD());
+		return json;
 	}
 
 	/**
