@@ -1,7 +1,10 @@
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+
+import com.sun.istack.internal.Nullable;
 
 import processing.core.PApplet;
 import processing.core.PShape;
@@ -18,6 +21,8 @@ public class ClosedHandDrawTest extends PApplet {
 	HashMap<Long, Person> tracks = new HashMap<Long, Person>();
 	PersonTracker tracker = new PersonTracker();
 
+	HashSet<Plane3d> planes = new HashSet<Plane3d>();
+
 	// default drawing hand
 	String trakcingHand = Body.RIGHT_HAND_STATE;
 	Point3d handRight = new Point3d();
@@ -26,6 +31,12 @@ public class ClosedHandDrawTest extends PApplet {
 
 	Boolean isDrawing = false;
 	Long drawerId;
+
+	Plane3d workingPlane;
+
+	// public static final String CIRCLE = "CIRCLE";
+	// public static final String RECTANGLE = "RECT";
+	// public static final String SQUARE = "SQUA";
 
 	public static float PROJECTOR_RATIO = 1080f / 1920.0f;
 
@@ -51,7 +62,6 @@ public class ClosedHandDrawTest extends PApplet {
 
 		update(bodyData);
 		drawing(isDrawing);
-
 	}
 
 	public void update(KinectBodyData bodyData) {
@@ -163,23 +173,68 @@ public class ClosedHandDrawTest extends PApplet {
 		saveJSONObject(json, "plane.json");
 	}
 
-	// public void addPath(Boolean isDrawing) {
-	// Point3d handLeft = tracks.get(drawerId).body.getJoint(Body.HAND_LEFT);
-	// }
+	public Plane3d selectPlane(PVector hand, double tol) {
+		Point3d pt = new Point3d(hand.x, hand.y, hand.z);
+		for (Plane3d plane : planes) {
+			if (plane.hasPoint(pt, tol))
+				return plane;
+		}
+		return null;
+	}
 
 	public void closePath() {
 
 	}
 
-	public void create() {
-		PShape shape = createShape();
-		shape.beginShape();
-		// shape.vertex( 0, 0);
-		// shape.vertex( len * .5, len * .5);
-		// shape.vertex( len, len);
-		// shape.vertex( len * .5, len);
-		// shape.vertex( 0, len);
-		shape.endShape(CLOSE);
+	public void default2dShape(String shape, Plane3d plane, float x, float y, float w, float h) {
+		PShape p = createShape();
+		switch (shape) {
+		case "rectangle":
+			p = createShape(RECT, x, y, w, h);
+			break;
+		case "circle":
+			p = createShape(ELLIPSE, x, y, w, h);
+			break;
+		case "triangle":
+			p = createShape(ELLIPSE, x, y, w, h);
+			break;
+		case "square":
+			p = createShape(RECT, x, y, w, w);
+			break;
+		default:
+			p = regPolygon(x, y, w, (int) h);
+		}
+	}
+
+	public PShape regPolygon(float x, float y, float radius, int npoints) {
+		PShape poly = createShape();
+		float angle = TWO_PI / npoints;
+		beginShape();
+		for (float a = 0; a < TWO_PI; a += angle) {
+			float sx = x + cos(a) * radius;
+			float sy = y + sin(a) * radius;
+			poly.vertex(sx, sy);
+		}
+		endShape(CLOSE);
+		return poly;
+	}
+
+	public void default3dShape(String shape, Plane3d plane, int w, int h, int d) {
+		PShape p = createShape();
+		// plane.getPlanePt()
+		// translate(, y, z);
+		switch (shape) {
+		case "cube":
+			p = createShape(BOX, w);
+			break;
+		case "box":
+			p = createShape(BOX, w, h, d);
+			break;
+		case "sphere":
+			// w as radius
+			p = createShape(SPHERE, w);
+			break;
+		}
 	}
 
 	public void settings() {

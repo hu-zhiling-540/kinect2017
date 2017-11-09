@@ -71,8 +71,8 @@ public class Plane3d {
 		this.c = this.norm.getZ();
 
 	}
-	
-	public Vec3d getNorm()	{
+
+	public Vec3d getNorm() {
 		return this.norm;
 	}
 
@@ -89,13 +89,14 @@ public class Plane3d {
 
 	/**
 	 * Returns true if point is on the plane by checking the distance between a
-	 * point and this plane is 0.
+	 * point and this plane is 0/ within tolerance.
 	 * 
 	 * @param pt
+	 * @param tol
 	 * @return
 	 */
-	public boolean hasPoint(Point3d pt) {
-		return signedPtDist(pt) == 0;
+	public boolean hasPoint(Point3d pt, double tol) {
+		return signedPtDist(pt) <= tol || signedPtDist(pt) >= -1f * tol;
 	}
 
 	/**
