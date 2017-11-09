@@ -186,57 +186,6 @@ public class ClosedHandDrawTest extends PApplet {
 
 	}
 
-	public void default2dShape(String shape, Plane3d plane, float x, float y, float w, float h) {
-		PShape p = createShape();
-		switch (shape) {
-		case "rectangle":
-			p = createShape(RECT, x, y, w, h);
-			break;
-		case "circle":
-			p = createShape(ELLIPSE, x, y, w, h);
-			break;
-		case "triangle":
-			p = createShape(ELLIPSE, x, y, w, h);
-			break;
-		case "square":
-			p = createShape(RECT, x, y, w, w);
-			break;
-		default:
-			p = regPolygon(x, y, w, (int) h);
-		}
-	}
-
-	public PShape regPolygon(float x, float y, float radius, int npoints) {
-		PShape poly = createShape();
-		float angle = TWO_PI / npoints;
-		beginShape();
-		for (float a = 0; a < TWO_PI; a += angle) {
-			float sx = x + cos(a) * radius;
-			float sy = y + sin(a) * radius;
-			poly.vertex(sx, sy);
-		}
-		endShape(CLOSE);
-		return poly;
-	}
-
-	public void default3dShape(String shape, Plane3d plane, int w, int h, int d) {
-		PShape p = createShape();
-		// plane.getPlanePt()
-		// translate(, y, z);
-		switch (shape) {
-		case "cube":
-			p = createShape(BOX, w);
-			break;
-		case "box":
-			p = createShape(BOX, w, h, d);
-			break;
-		case "sphere":
-			// w as radius
-			p = createShape(SPHERE, w);
-			break;
-		}
-	}
-
 	public void settings() {
 		createWindow(true, true, .5f);
 	}
