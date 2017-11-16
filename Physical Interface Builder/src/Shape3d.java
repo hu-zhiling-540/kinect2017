@@ -15,14 +15,11 @@ import processing.data.JSONObject;
  *
  */
 public class Shape3d {
-
 	long shapeID;
+	boolean isClosed; // whether shape is finished adding vertex
+	Plane3d onPlane; // for 2d shape
 
-	Plane3d onPlane;
-	PShape curr;
-
-	boolean isClosed;
-	ArrayList<Point3d> tempPts; // points outlining the shape
+	ArrayList<Point3d> tempPts; // rough points added to the shape
 	ArrayList<Point3d> planarPts; // points outlining the shape
 	Vec3d extrusion;
 
@@ -73,11 +70,23 @@ public class Shape3d {
 		tempPts.add(pt);
 	}
 
+	public void validate() {
+		if (tempPts == null)
+			throw new IllegalArgumentException("No points to be validate a shape.");
+		// it takes at least three points to form a polygon/shape
+		if (tempPts.size() < 3)
+			throw new IllegalArgumentException("Number of points is " + tempPts.size());
+		// check if a list of points are collinear
+
+		isClosed = true;
+	}
+
 	public Shape3d buildShape() {
 		validate();
-		Plane3d plane;
-		// Shape3d sp = this(plane, tempPts);
-		Shape3d sp = null;
+		OrthogonalRegression3D or = new OrthogonalRegression3D(tempPts);
+		Plane3d plane = or.fitPlane(1.0);
+		Shape3d sp = new Shape3d(plane, tempPts);
+		// Shape3d sp = null;
 		return sp;
 	}
 
@@ -130,15 +139,6 @@ public class Shape3d {
 			return true;
 		return false;
 
-	}
-
-	public void validate() {
-		// it takes at least three points to form a polygon/shape
-		if (tempPts.size() < 3)
-			return;
-		// check if a list of points are collinear
-
-		isClosed = true;
 	}
 
 	/**

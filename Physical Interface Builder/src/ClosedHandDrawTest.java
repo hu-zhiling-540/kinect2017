@@ -182,10 +182,6 @@ public class ClosedHandDrawTest extends PApplet {
 		return null;
 	}
 
-	public void closePath() {
-
-	}
-
 	public void settings() {
 		createWindow(true, true, .5f);
 	}
