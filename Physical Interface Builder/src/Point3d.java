@@ -12,6 +12,26 @@ public class Point3d extends Vec3d {
 		this(0, 0, 0);
 	}
 
+	/**
+	 * Constructor for 2d point
+	 * 
+	 * @param x
+	 * @param y
+	 */
+	public Point3d(double x, double y) {
+		this.x = x;
+		this.y = y;
+		this.z = 0;
+		this.arr = new double[] { x, y, 0 };
+	}
+
+	/**
+	 * Contstructor for 3d point
+	 * 
+	 * @param x
+	 * @param y
+	 * @param z
+	 */
 	public Point3d(double x, double y, double z) {
 		this.x = x;
 		this.y = y;
