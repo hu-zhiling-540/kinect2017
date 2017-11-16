@@ -98,6 +98,18 @@ public class Point3d extends Vec3d {
 	public double[] getArr() {
 		return arr;
 	}
+
+	public double getX() {
+		return this.x;
+	}
+
+	public double getY() {
+		return this.y;
+	}
+
+	public double getZ() {
+		return this.z;
+	}
 	// public static boolean collinear3dPoints(Vec3d p1, Vec3d p2, Vec3d p3) {
 	// double area = p1.getX() * (p2.getY() - p3.getY()) + p2.getX() * (p3.getY() -
 	// p1.getY())

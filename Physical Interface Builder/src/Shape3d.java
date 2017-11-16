@@ -23,13 +23,19 @@ public class Shape3d {
 	ArrayList<Point3d> planarPts; // points outlining the shape
 	Vec3d extrusion;
 
-	ArrayList<LineSeg> edges;
 	double xMin = Double.NEGATIVE_INFINITY;
 	double xMax = Double.POSITIVE_INFINITY;
 	double yMin = Double.NEGATIVE_INFINITY;
 	double yMax = Double.POSITIVE_INFINITY;
 	double zMin = Double.NEGATIVE_INFINITY;
 	double zMax = Double.POSITIVE_INFINITY;
+
+	public Shape3d() {
+		tempPts = new ArrayList<Point3d>();
+		planarPts = new ArrayList<Point3d>();
+		isClosed = false;
+		extrusion = null;
+	}
 
 	public Shape3d(Plane3d plane, ArrayList<Point3d> points) {
 		planarPts = new ArrayList<Point3d>();
@@ -47,7 +53,7 @@ public class Shape3d {
 
 	public void addVertex(Point3d pt) {
 		if (isClosed)
-			throw new RuntimeException("Shape is closed.");
+			throw new IllegalArgumentException("Shape is closed.");
 		// shape is new
 		if (tempPts.size() == 0) {
 			xMin = pt.getX();
@@ -60,18 +66,20 @@ public class Shape3d {
 		} else {
 			if (pt.getX() > xMax)
 				xMax = pt.getX();
-			if (pt.getX() < xMin)
+			else if (pt.getX() < xMin)
 				xMin = pt.getX();
 			if (pt.getY() > yMax)
 				yMax = pt.getY();
-			if (pt.getY() < yMin)
+			else if (pt.getY() < yMin)
 				yMin = pt.getY();
 		}
 		tempPts.add(pt);
 	}
 
 	public void validate() {
-		if (tempPts == null)
+		if (isClosed)
+			throw new IllegalArgumentException("Shape is closed.");
+		if (tempPts.size() == 0)
 			throw new IllegalArgumentException("No points to be validate a shape.");
 		// it takes at least three points to form a polygon/shape
 		if (tempPts.size() < 3)
@@ -83,6 +91,10 @@ public class Shape3d {
 
 	public Shape3d buildShape() {
 		validate();
+		if (extrusion == null) {
+			planarPts = tempPts;
+			return this;
+		}
 		OrthogonalRegression3D or = new OrthogonalRegression3D(tempPts);
 		Plane3d plane = or.fitPlane(1.0);
 		Shape3d sp = new Shape3d(plane, tempPts);
@@ -101,18 +113,19 @@ public class Shape3d {
 		if (!isClosed)
 			throw new IllegalArgumentException("Shape is not closed yet.");
 		if (pt.getX() > xMax || pt.getX() < xMin || pt.getY() > yMax || pt.getY() < yMin)
-			return false;
+			return true;
 		// is a 3d shape
 		if (!is2dShape()) {
 			if (pt.getZ() > zMax || pt.getZ() < zMin)
-				return false;
+				return true;
 		}
-		return true;
+		return false;
 	}
 
 	// a half-line, together with its start point.
 	public LineSeg createRay(Point3d pt) {
-		Point3d extreme = new Point3d(xMax, yMax);
+		double epsilon = (xMax - xMin) / 10e6;
+		Point3d extreme = new Point3d(xMax + epsilon, yMax);
 		return new LineSeg(pt, extreme);
 	}
 
@@ -125,7 +138,7 @@ public class Shape3d {
 	 * @param pt
 	 * @return
 	 */
-	public boolean isInside2d(Point3d pt) {
+	public boolean contains(Point3d pt) {
 		if (offFixedBounds(pt))
 			return false;
 		LineSeg ray = createRay(pt);
@@ -135,10 +148,12 @@ public class Shape3d {
 			if (edge.crossLine(ray))
 				xings += 1;
 		}
+		LineSeg edge = new LineSeg(planarPts.get(planarPts.size() - 1), planarPts.get(0));
+		if (edge.crossLine(ray))
+			xings += 1;
 		if (xings % 2 == 1)
 			return true;
 		return false;
-
 	}
 
 	/**
@@ -253,7 +268,6 @@ public class Shape3d {
 			if (this.containsPt(xingPt) && that.containsPt(xingPt))
 				return true;
 			return false;
-
 		}
 	}
 }
