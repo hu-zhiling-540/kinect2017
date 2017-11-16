@@ -16,105 +16,6 @@ import processing.data.JSONObject;
  */
 public class Shape3d {
 
-	class LineSegment {
-		Point3d start;
-		Point3d end;
-		// 2d mode
-		double k; // slope
-		double b; // intercept
-
-		LineSegment(Point3d start, Point3d end) {
-			if (start == null)
-				throw new NullPointerException("Start point is null.");
-			if (end == null)
-				throw new NullPointerException("End point is null.");
-			this.start = start;
-			this.end = end;
-		}
-
-		// (y2-y1)/(x2-x1)
-		double slope() {
-			if (isVertical())
-				throw new IllegalArgumentException("Vertical line has an undefined slope.");
-			return (end.getY() - start.getY()) / (end.getX() - start.getX());
-		}
-
-		// y1 - k*x1
-		double intercept() {
-			return start.getY() - slope() * start.getX();
-		}
-
-		boolean isVertical() {
-			return start.getX() == end.getX();
-		}
-
-		boolean isParallel(LineSegment that) {
-			return this.slope() == that.slope();
-		}
-
-		// y = mx + b
-
-		// the angle is the arctangent2 of (y2 - y1, x2 - x1)
-		double angle() {
-			return Math.atan2(end.getY() - start.getY(), end.getX() - start.getX()) * 180.0 / Math.PI;
-		}
-
-		// line segment connecting points (x1, y1) and (x2, y2) is the square root of
-		// (x2 - x1)2 + (y2 - y1)2
-		double length() {
-			return Math.sqrt(Math.pow(end.getX() - start.getX(), 2) + Math.pow(end.getY() - start.getY(), 2));
-		}
-
-		/**
-		 * Checks if point lies on the line segment
-		 * 
-		 * @param pt
-		 * @return
-		 */
-		boolean containsPt(Point3d pt) {
-			if (pt.getX() <= Math.max(start.getX(), end.getX()) && pt.getX() >= Math.min(start.getX(), end.getX())
-					&& pt.getY() <= Math.max(start.getY(), end.getY())
-					&& pt.getY() >= Math.min(start.getY(), end.getY()))
-				return true;
-			return false;
-		}
-
-		boolean crossLine(LineSegment that) {
-			Point3d xingPt;
-			if (this.isVertical() && that.isVertical()) {
-				if (this.start.getX() != that.start.getX())
-					return false;
-				// overlap
-				// if (this.start.getY() == that.start.getY() || this.start.getY() ==
-				// that.end.getY())
-			}
-			// if only one line segment is vertical
-			if (this.isVertical() && !that.isVertical()) {
-				double x = this.start.getX();
-				double y = that.slope() * x + that.intercept();
-				xingPt = new Point3d(x, y);
-			} else if (that.isVertical() && !this.isVertical()) {
-				double x = that.start.getX();
-				double y = this.slope() * x + this.intercept();
-				xingPt = new Point3d(x, y);
-			}
-			// neither is vertical
-			else {
-				if (this.isParallel(that))
-					return false;
-				// x = (b2 - b2) / (k1 - k2)
-				double x = (that.intercept() - this.intercept()) / (this.slope() - that.slope());
-				double y = that.slope() * x + that.intercept();
-				xingPt = new Point3d(x, y);
-			}
-			// check if this point is within both segments
-			if (this.containsPt(xingPt) && that.containsPt(xingPt))
-				return true;
-			return false;
-
-		}
-	}
-
 	long shapeID;
 
 	Plane3d onPlane;
@@ -123,9 +24,9 @@ public class Shape3d {
 	boolean isClosed;
 	ArrayList<Point3d> tempPts; // points outlining the shape
 	ArrayList<Point3d> planarPts; // points outlining the shape
-
 	Vec3d extrusion;
 
+	ArrayList<LineSeg> edges;
 	double xMin = Double.NEGATIVE_INFINITY;
 	double xMax = Double.POSITIVE_INFINITY;
 	double yMin = Double.NEGATIVE_INFINITY;
@@ -189,7 +90,7 @@ public class Shape3d {
 	 */
 	public boolean offFixedBounds(Point3d pt) {
 		if (!isClosed)
-			throw new RuntimeException("Shape is not closed yet.");
+			throw new IllegalArgumentException("Shape is not closed yet.");
 		if (pt.getX() > xMax || pt.getX() < xMin || pt.getY() > yMax || pt.getY() < yMin)
 			return false;
 		// is a 3d shape
@@ -198,6 +99,12 @@ public class Shape3d {
 				return false;
 		}
 		return true;
+	}
+
+	// a half-line, together with its start point.
+	public LineSeg createRay(Point3d pt) {
+		Point3d extreme = new Point3d(xMax, yMax);
+		return new LineSeg(pt, extreme);
 	}
 
 	/**
@@ -212,10 +119,13 @@ public class Shape3d {
 	public boolean isInside2d(Point3d pt) {
 		if (offFixedBounds(pt))
 			return false;
+		LineSeg ray = createRay(pt);
 		int xings = 0;
-		for (int i = 0; i < planarPts.size(); i++) {
+		for (int i = 1; i < planarPts.size(); i++) {
+			LineSeg edge = new LineSeg(planarPts.get(i - 1), planarPts.get(i));
+			if (edge.crossLine(ray))
+				xings += 1;
 		}
-
 		if (xings % 2 == 1)
 			return true;
 		return false;
@@ -231,6 +141,11 @@ public class Shape3d {
 		isClosed = true;
 	}
 
+	/**
+	 * Extrusion is null for a 2d shape
+	 * 
+	 * @return
+	 */
 	public boolean is2dShape() {
 		return extrusion == null;
 	}
@@ -241,5 +156,104 @@ public class Shape3d {
 
 	public Vec3d getExtr() {
 		return this.extrusion;
+	}
+
+	class LineSeg {
+		Point3d start;
+		Point3d end;
+		// 2d mode
+		double k; // slope
+		double b; // intercept
+
+		LineSeg(Point3d start, Point3d end) {
+			if (start == null)
+				throw new NullPointerException("Start point is null.");
+			if (end == null)
+				throw new NullPointerException("End point is null.");
+			this.start = start;
+			this.end = end;
+		}
+
+		// (y2-y1)/(x2-x1)
+		double slope() {
+			if (isVertical())
+				throw new IllegalArgumentException("Vertical line has an undefined slope.");
+			return (end.getY() - start.getY()) / (end.getX() - start.getX());
+		}
+
+		// y1 - k*x1
+		double intercept() {
+			return start.getY() - slope() * start.getX();
+		}
+
+		// the angle is the arctangent2 of (y2 - y1, x2 - x1)
+		double angle() {
+			return Math.atan2(end.getY() - start.getY(), end.getX() - start.getX()) * 180.0 / Math.PI;
+		}
+
+		// line segment connecting points (x1, y1) and (x2, y2) is the square root of
+		// (x2 - x1)2 + (y2 - y1)2
+		double length() {
+			return Math.sqrt(Math.pow(end.getX() - start.getX(), 2) + Math.pow(end.getY() - start.getY(), 2));
+		}
+
+		boolean isParallel(LineSeg that) {
+			return this.slope() == that.slope();
+		}
+
+		// y = mx + b
+
+		boolean isVertical() {
+			return start.getX() == end.getX();
+		}
+
+		/**
+		 * Checks if point lies on the line segment
+		 * 
+		 * @param pt
+		 * @return
+		 */
+		boolean containsPt(Point3d pt) {
+			if (pt.getX() <= Math.max(start.getX(), end.getX()) && pt.getX() >= Math.min(start.getX(), end.getX())
+					&& pt.getY() <= Math.max(start.getY(), end.getY())
+					&& pt.getY() >= Math.min(start.getY(), end.getY()))
+				return true;
+			return false;
+		}
+
+		boolean crossLine(LineSeg that) {
+			Point3d xingPt;
+			if (this.isVertical() && that.isVertical()) {
+				if (this.start.getX() != that.start.getX())
+					return false;
+				// overlap
+				// if (this.start.getY() == that.start.getY() || this.start.getY() ==
+				// that.end.getY())
+			}
+			// if only one line segment is vertical
+			if (this.isVertical() && !that.isVertical()) {
+				double x = this.start.getX();
+				double y = that.slope() * x + that.intercept();
+				xingPt = new Point3d(x, y);
+			} else if (that.isVertical() && !this.isVertical()) {
+				double x = that.start.getX();
+				double y = this.slope() * x + this.intercept();
+				xingPt = new Point3d(x, y);
+			}
+			// neither is vertical
+			else {
+				if (this.isParallel(that))
+					return false;
+				// x = (b2 - b2) / (k1 - k2)
+				double x = (that.intercept() - this.intercept()) / (this.slope() - that.slope());
+				double y = that.slope() * x + that.intercept();
+				xingPt = new Point3d(x, y);
+			}
+			// check if this point is within both segments
+			if (this.containsPt(xingPt) && that.containsPt(xingPt))
+				return true;
+			return false;
+
+		}
 	}
 }
