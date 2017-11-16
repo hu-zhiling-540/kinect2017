@@ -1,4 +1,3 @@
-import java.util.Arrays;
 
 public class Point3d extends Vec3d {
 
@@ -60,8 +59,8 @@ public class Point3d extends Vec3d {
 	}
 
 	/**
-	 * Returns true if two three points are collinear by checking two vectors
-	 * between points are collinear
+	 * Returns true if three points are collinear by checking two vectors between
+	 * points are collinear
 	 * 
 	 * @param p1
 	 * @param p2
