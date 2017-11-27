@@ -21,7 +21,7 @@ public class Shape3d {
 
 	ArrayList<Point3d> tempPts; // rough points added to the shape
 	ArrayList<Point3d> planarPts; // points outlining the shape
-	Vec3d extrusion;
+	double extrusion;
 
 	double xMin = Double.NEGATIVE_INFINITY;
 	double xMax = Double.POSITIVE_INFINITY;
@@ -34,17 +34,17 @@ public class Shape3d {
 		tempPts = new ArrayList<Point3d>();
 		planarPts = new ArrayList<Point3d>();
 		isClosed = false;
-		extrusion = null;
+		extrusion = 0;
 	}
 
 	public Shape3d(Plane3d plane, ArrayList<Point3d> points) {
 		planarPts = new ArrayList<Point3d>();
 		for (int i = 0; i < points.size(); i++)
 			planarPts.add(plane.ptProjOnPlane(points.get(i)));
-		this.extrusion = null;
+		this.extrusion = 0;
 	}
 
-	public Shape3d(Plane3d plane, ArrayList<Point3d> points, Vec3d extrusion) {
+	public Shape3d(Plane3d plane, ArrayList<Point3d> points, double extrusion) {
 		planarPts = new ArrayList<Point3d>();
 		for (int i = 0; i < points.size(); i++)
 			planarPts.add(plane.ptProjOnPlane(points.get(i)));
@@ -91,7 +91,7 @@ public class Shape3d {
 
 	public Shape3d buildShape() {
 		validate();
-		if (extrusion == null) {
+		if (extrusion == 0) {
 			planarPts = tempPts;
 			return this;
 		}
@@ -162,14 +162,14 @@ public class Shape3d {
 	 * @return
 	 */
 	public boolean is2dShape() {
-		return extrusion == null;
+		return extrusion == 0;
 	}
 
-	public void setExtr(Vec3d extrusion) {
+	public void setExtr(double extrusion) {
 		this.extrusion = extrusion;
 	}
 
-	public Vec3d getExtr() {
+	public double getExtr() {
 		return this.extrusion;
 	}
 
