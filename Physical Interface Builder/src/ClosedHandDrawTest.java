@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 import com.sun.istack.internal.Nullable;
 
@@ -17,26 +18,23 @@ public class ClosedHandDrawTest extends PApplet {
 	KinectBodyDataProvider kinectReader;
 	KinectBodyData bodyData;
 
-	Long firstPersonId = null;
-	HashMap<Long, Person> tracks = new HashMap<Long, Person>();
-	PersonTracker tracker = new PersonTracker();
+	Long drawerID = null;
+	PersonTracker pTracker = new PersonTracker();
+	HashMap<Long, Person> people = new HashMap<Long, Person>();
 
 	HashSet<Plane3d> planes = new HashSet<Plane3d>();
+	HashMap<Long, Shape3d> shapes = new HashMap<Long, Shape3d>();
+	Shape3d currShape;
 
 	// default drawing hand
 	String trakcingHand = Body.RIGHT_HAND_STATE;
-	Point3d handRight = new Point3d();
 
-	ArrayList<Point3d> marks = new ArrayList<Point3d>();
+	ArrayList<Point3d> planeMarks = new ArrayList<Point3d>();
 
 	Boolean isDrawing = false;
 	Long drawerId;
 
 	Plane3d workingPlane;
-
-	// public static final String CIRCLE = "CIRCLE";
-	// public static final String RECTANGLE = "RECT";
-	// public static final String SQUARE = "SQUA";
 
 	public static float PROJECTOR_RATIO = 1080f / 1920.0f;
 
@@ -50,7 +48,9 @@ public class ClosedHandDrawTest extends PApplet {
 		kinectReader.start();
 	}
 
-	// called on each frame
+	/**
+	 * Will be called on each frame
+	 */
 	public void draw() {
 		setScale(.5f);
 
@@ -65,19 +65,82 @@ public class ClosedHandDrawTest extends PApplet {
 	}
 
 	public void update(KinectBodyData bodyData) {
-		tracker.update(bodyData);
+		pTracker.update(bodyData);
 
-		for (Long id : tracker.getEnters()) {
-			tracks.put(id, new Person());
-		}
-		for (Long id : tracker.getExits()) {
-			tracks.remove(id);
-		}
+		for (Long id : pTracker.getEnters())
+			people.put(id, new Person());
 
-		for (Body b : tracker.getPeople().values()) {
-			Person p = tracks.get(b.getId());
+		for (Long id : pTracker.getExits())
+			people.remove(id);
+
+		for (Body b : pTracker.getPeople().values()) {
+			Person p = people.get(b.getId());
 			p.update(b);
-			drawingCmd(p);
+			// drawing(p);
+		}
+	}
+
+	public void drawing(Person p) {
+		Body bd = p.body;
+		long id = bd.getId(); // body id
+		// if the person's drawing hand is open
+		if (bd.rightHandOpen) {
+			// no one else initiates the drawing mood
+			if (drawerID == null || isDrawing == false) {
+				drawerID = id;
+				isDrawing = true;
+				currShape = new Shape3d();
+			}
+			// same drawer
+			else if (drawerID == id) {
+				// currently working on a shape
+				if (isDrawing == true) {
+					PVector rt = bd.getJoint(Body.HAND_RIGHT);
+					if (rt != null)
+						currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
+				}
+			} else if (drawerID != id)
+				return;
+		} else {
+			// is current drawer
+			if (drawerID == id) {
+				currShape.validate();
+				shapes.put(createShapeId(id), currShape);
+				isDrawing = false; // resumes drawing state
+			}
+		}
+
+	}
+
+	/**
+	 * Mergs drawerID and a random number to form the shapeID
+	 * 
+	 * @param drawerID
+	 * @return
+	 */
+	public Long createShapeId(long drawerID) {
+		Random ran = new Random();
+		int x = ran.nextInt(10); // give a number 1 - 9
+		Long lx = new Long(x);
+		String l3 = Long.toString(lx) + Long.toString(drawerID);
+		return Long.valueOf(l3).longValue(); // converting String to long
+	}
+
+	public void drawShape(Boolean isDrawing, Shape3d currShape, double tol) {
+		if (isDrawing) {
+			if (!currShape.isClosed) {
+				Body drawer = people.get(drawerId).body;
+				PVector handRight = drawer.getJoint(Body.HAND_RIGHT);
+				if (handRight != null)
+					if (!currShape.isClosed) {
+						Point3d pt = new Point3d(handRight.x, handRight.y, handRight.z);
+						if (pt.distanceTo(currShape.latestVertex()) >= tol)
+							currShape.addVertex(pt);
+					}
+			}
+
+		} else {
+
 		}
 	}
 
@@ -88,11 +151,11 @@ public class ClosedHandDrawTest extends PApplet {
 			int color = color(0, 255, 255);
 			fill(color);
 			strokeWeight(.1f);
-			Body drawer = tracks.get(drawerId).body;
+			Body drawer = people.get(drawerId).body;
 			PVector handRight = drawer.getJoint(Body.HAND_RIGHT);
 			drawIfValid(handRight);
 			if (handRight != null) {
-				marks.add(new Point3d(handRight.x, handRight.y, handRight.z));
+				planeMarks.add(new Point3d(handRight.x, handRight.y, handRight.z));
 			}
 		}
 	}
@@ -103,30 +166,6 @@ public class ClosedHandDrawTest extends PApplet {
 		}
 	}
 
-	public void drawingCmd(Person p) {
-		// current body
-		Body bd = p.body;
-		// current body id
-		long id = bd.getId();
-		if (bd != null) {
-			// not in drawing mood
-			if (isDrawing == false) {
-				// check if right drawing hand is open
-				if (bd.rightHandOpen == true) {
-					startDrawing(id);
-				}
-			}
-			// in drawing
-			else {
-				// keep track of the drawing person
-				if (id == drawerId) {
-					if (!bd.rightHandOpen)
-						stopDrawing();
-				}
-			}
-		}
-	}
-
 	public void startDrawing(Long id) {
 		isDrawing = true;
 		drawerId = id;
@@ -134,8 +173,8 @@ public class ClosedHandDrawTest extends PApplet {
 	}
 
 	public void stopDrawing() {
-		List<Point3d> copy = new ArrayList<>(marks);
-		marks = new ArrayList<Point3d>();
+		List<Point3d> copy = new ArrayList<>(planeMarks);
+		planeMarks = new ArrayList<Point3d>();
 		isDrawing = false;
 		System.out.println("Stop Drawing");
 		// System.out.println(copy.size());
@@ -183,7 +222,7 @@ public class ClosedHandDrawTest extends PApplet {
 	}
 
 	public void settings() {
-		createWindow(true, true, .5f);
+		createWindow(true, false, .5f);
 	}
 
 	public void createWindow(boolean useP2D, boolean isFullscreen, float windowsScale) {

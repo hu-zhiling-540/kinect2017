@@ -8,8 +8,7 @@ import processing.data.JSONObject;
 
 /**
  * Default 2d shape is defined by a circular sequence of points; Plus extrusion
- * represented by a 3d vector is a 3d shape. Connects the points without
- * crossings.
+ * is a 3d shape. Connects the points without crossings.
  * 
  * @author Zhiling
  *
@@ -85,7 +84,6 @@ public class Shape3d {
 		if (tempPts.size() < 3)
 			throw new IllegalArgumentException("Number of points is " + tempPts.size());
 		// check if a list of points are collinear
-
 		isClosed = true;
 	}
 
@@ -132,8 +130,8 @@ public class Shape3d {
 	/**
 	 * Returns true if this shape contains the point. Algorithm: Draw a horizontal
 	 * line to the right of each point and extend it to infinity Count the number of
-	 * times a line intersects the polygon. even number ⇒ point is outside; odd
-	 * number ⇒ point is inside
+	 * times a line intersects the polygon. even number - point is outside; odd
+	 * number - point is inside
 	 * 
 	 * @param pt
 	 * @return
@@ -171,6 +169,24 @@ public class Shape3d {
 
 	public double getExtr() {
 		return this.extrusion;
+	}
+
+	/**
+	 * @return the tempPts
+	 */
+	public ArrayList<Point3d> getTempPts() {
+		return tempPts;
+	}
+
+	/**
+	 * @return the planarPts
+	 */
+	public ArrayList<Point3d> getPlanarPts() {
+		return planarPts;
+	}
+
+	public Point3d latestVertex() {
+		return tempPts.get(tempPts.size());
 	}
 
 	class LineSeg {
