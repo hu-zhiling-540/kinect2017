@@ -8,7 +8,7 @@ public class Person {
 	float size;
 
 	public Person() {
-		
+
 	}
 
 	public void update(Body body) {
