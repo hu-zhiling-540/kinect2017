@@ -12,9 +12,9 @@ public class Vec3d {
 	private double x;
 	private double y;
 	private double z;
-	private double[] arr = new double[3]; // array of vector's components
+	protected double[] arr = new double[3]; // array of vector's components
 
-	private final int len = 3; // length of the vector
+//	private final int len = 3; // length of the vector
 
 	public static final Vec3d ZERO_V3 = new Vec3d(0, 0, 0);
 	public static final Vec3d ONE_V3 = new Vec3d(1, 1, 1);
@@ -124,10 +124,6 @@ public class Vec3d {
 		return Math.sqrt(this.dot(this));
 	}
 
-	// public double distanceTo(Point3d that) {
-	// return this.subtract(that).magnitude();
-	// }
-
 	/**
 	 * Normalizes this vector to a unit length of 1
 	 * 
@@ -142,7 +138,6 @@ public class Vec3d {
 			return ZERO_V3;
 		double dot = this.dot(that);
 		dot /= Math.pow(that.magnitude(), 2);
-		// System.out.println(that.scale(dot));
 		return that.scale(dot);
 	}
 

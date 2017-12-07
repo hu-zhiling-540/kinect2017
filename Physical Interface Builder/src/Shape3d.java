@@ -22,6 +22,8 @@ public class Shape3d {
 	ArrayList<Point3d> planarPts; // points outlining the shape
 	double extrusion;
 
+	double tol = 50;
+
 	double xMin = Double.NEGATIVE_INFINITY;
 	double xMax = Double.POSITIVE_INFINITY;
 	double yMin = Double.NEGATIVE_INFINITY;
@@ -34,12 +36,15 @@ public class Shape3d {
 		planarPts = new ArrayList<Point3d>();
 		isClosed = false;
 		extrusion = 0;
+
+		System.out.println("just created a shape");
 	}
 
 	public Shape3d(Plane3d plane, ArrayList<Point3d> points) {
 		planarPts = new ArrayList<Point3d>();
-		for (int i = 0; i < points.size(); i++)
+		for (int i = 0; i < points.size(); i++) {
 			planarPts.add(plane.ptProjOnPlane(points.get(i)));
+		}
 		this.extrusion = 0;
 	}
 
@@ -87,17 +92,25 @@ public class Shape3d {
 		isClosed = true;
 	}
 
-	public Shape3d buildShape() {
+	public void buildShape() {
 		validate();
-		if (extrusion == 0) {
-			planarPts = tempPts;
-			return this;
-		}
+		// if (extrusion == 0) {
+		// planarPts = tempPts;
+		// return this;
+		// }
 		OrthogonalRegression3D or = new OrthogonalRegression3D(tempPts);
 		Plane3d plane = or.fitPlane(1.0);
-		Shape3d sp = new Shape3d(plane, tempPts);
-		// Shape3d sp = null;
-		return sp;
+		System.out.println(plane.toString());
+
+		planarPts = new ArrayList<Point3d>();
+		for (int i = 0; i < tempPts.size(); i++) {
+			planarPts.add(plane.ptProjOnPlane(tempPts.get(i)));
+		}
+		this.extrusion = 0;
+
+		// Shape3d sp = new Shape3d(plane, tempPts);
+		// // Shape3d sp = null;
+		// return sp;
 	}
 
 	/**

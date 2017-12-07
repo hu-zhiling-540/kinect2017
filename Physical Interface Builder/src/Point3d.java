@@ -57,6 +57,14 @@ public class Point3d extends Vec3d {
 		return new Vec3d(rslt);
 	}
 
+	// !!! need to be edited for subtraction bewteen points!!
+	public Point3d subtractP(Vec3d that) {
+		double[] rslt = new double[3];
+		for (int i = 0; i < 3; i++)
+			rslt[i] = this.arr[i] - that.arr[i];
+		return new Point3d(rslt);
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();

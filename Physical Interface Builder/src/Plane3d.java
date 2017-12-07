@@ -30,6 +30,7 @@ public class Plane3d {
 	public Plane3d(Vec3d norm, double d) {
 		setNorm(norm);
 		this.d = d;
+		setPlanePt();
 	}
 
 	public Plane3d(Vec3d norm, Point3d planePt) {
@@ -111,7 +112,7 @@ public class Plane3d {
 	 */
 	public Point3d ptProjOnPlane(Point3d projPt) {
 		double dist = signedPtDist(projPt);
-		return (Point3d) projPt.subtract(this.norm.scale(dist));
+		return projPt.subtractP(this.norm.scale(dist));
 	}
 
 	/**
