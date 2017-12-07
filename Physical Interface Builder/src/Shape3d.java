@@ -99,14 +99,17 @@ public class Shape3d {
 		// return this;
 		// }
 		OrthogonalRegression3D or = new OrthogonalRegression3D(tempPts);
-		Plane3d plane = or.fitPlane(1.0);
-		System.out.println(plane.toString());
-
-		planarPts = new ArrayList<Point3d>();
-		for (int i = 0; i < tempPts.size(); i++) {
-			planarPts.add(plane.ptProjOnPlane(tempPts.get(i)));
+		try {
+			Plane3d plane = or.fitPlane(1.0);
+			System.out.println(plane.toString());
+			planarPts = new ArrayList<Point3d>();
+			for (int i = 0; i < tempPts.size(); i++) {
+				planarPts.add(plane.ptProjOnPlane(tempPts.get(i)));
+			}
+			this.extrusion = 0;
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
 		}
-		this.extrusion = 0;
 
 		// Shape3d sp = new Shape3d(plane, tempPts);
 		// // Shape3d sp = null;

@@ -42,7 +42,7 @@ public class UDPRecorder {
 	}
 
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-		new UDPRecorder("openDrawShape.kinect", 8008, 20000).record();
+		new UDPRecorder("openDrawShape.kinect", 8008, 30000).record();
 	}
 
 }
