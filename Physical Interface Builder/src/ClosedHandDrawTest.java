@@ -40,7 +40,7 @@ public class ClosedHandDrawTest extends PApplet {
 
 	public void setup() {
 		try {
-			kinectReader = new KinectBodyDataProvider("openClosedHand.kinect", 2);
+			kinectReader = new KinectBodyDataProvider("openDrawShape.kinect", 2);
 		} catch (IOException e) {
 			System.out.println("Unable to creat e kinect producer");
 		}
@@ -61,7 +61,7 @@ public class ClosedHandDrawTest extends PApplet {
 		// bodyData = kinectReader.getData();
 
 		update(bodyData);
-		drawing(isDrawing);
+		// drawing(isDrawing);
 	}
 
 	public void update(KinectBodyData bodyData) {
@@ -76,7 +76,8 @@ public class ClosedHandDrawTest extends PApplet {
 		for (Body b : pTracker.getPeople().values()) {
 			Person p = people.get(b.getId());
 			p.update(b);
-			// drawing(p);
+			drawing(p);
+			// openHand();
 		}
 	}
 
@@ -87,7 +88,7 @@ public class ClosedHandDrawTest extends PApplet {
 		if (bd.rightHandOpen) {
 			// no one else initiates the drawing mood
 			if (drawerID == null || isDrawing == false) {
-				drawerID = id;
+				drawerID = new Long(id);
 				isDrawing = true;
 				currShape = new Shape3d();
 			}
@@ -96,20 +97,21 @@ public class ClosedHandDrawTest extends PApplet {
 				// currently working on a shape
 				if (isDrawing == true) {
 					PVector rt = bd.getJoint(Body.HAND_RIGHT);
-					if (rt != null)
+
+					if (rt != null) {
 						currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
+						openHand(rt);
+					}
 				}
 			} else if (drawerID != id)
 				return;
 		} else {
-			// is current drawer
-			if (drawerID == id) {
-				currShape.validate();
+			if (drawerID != null && drawerID == id && !currShape.isClosed) {
+				currShape.buildShape();
 				shapes.put(createShapeId(id), currShape);
 				isDrawing = false; // resumes drawing state
 			}
 		}
-
 	}
 
 	/**
@@ -126,50 +128,29 @@ public class ClosedHandDrawTest extends PApplet {
 		return Long.valueOf(l3).longValue(); // converting String to long
 	}
 
-	public void drawShape(Boolean isDrawing, Shape3d currShape, double tol) {
-		if (isDrawing) {
-			if (!currShape.isClosed) {
-				Body drawer = people.get(drawerId).body;
-				PVector handRight = drawer.getJoint(Body.HAND_RIGHT);
-				if (handRight != null)
-					if (!currShape.isClosed) {
-						Point3d pt = new Point3d(handRight.x, handRight.y, handRight.z);
-						if (pt.distanceTo(currShape.latestVertex()) >= tol)
-							currShape.addVertex(pt);
-					}
-			}
-
-		} else {
-
-		}
-	}
-
-	public void drawing(Boolean isDrawing) {
-		if (isDrawing)
-			return;
-		else {
-			int color = color(0, 255, 255);
-			fill(color);
-			strokeWeight(.1f);
-			Body drawer = people.get(drawerId).body;
-			PVector handRight = drawer.getJoint(Body.HAND_RIGHT);
-			drawIfValid(handRight);
-			if (handRight != null) {
-				planeMarks.add(new Point3d(handRight.x, handRight.y, handRight.z));
-			}
-		}
+	public void openHand(PVector h) {
+		// if (isDrawing)
+		// return;
+		// else {
+		int color = color(0, 255, 255);
+		fill(color);
+		strokeWeight(.1f);
+		// if (drawerID == null)
+		// return;
+		//// System.out.println(drawerId.toString());
+		// Body drawer = people.get(drawerId).body;
+		// PVector handRight = drawer.getJoint(Body.HAND_RIGHT);
+		drawIfValid(h);
+		// if (handRight != null) {
+		// planeMarks.add(new Point3d(handRight.x, handRight.y, handRight.z));
+		// }
+		// }
 	}
 
 	public void drawIfValid(PVector vec) {
 		if (vec != null) {
 			ellipse(vec.x, vec.y, .1f, .1f);
 		}
-	}
-
-	public void startDrawing(Long id) {
-		isDrawing = true;
-		drawerId = id;
-		System.out.println("Drawing");
 	}
 
 	public void stopDrawing() {

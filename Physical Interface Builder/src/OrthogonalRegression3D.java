@@ -61,7 +61,7 @@ public class OrthogonalRegression3D {
 			M.set(i, 2, coord[2] - cCoord[2]);
 			i++;
 		}
-		System.out.println(strung(M));
+//		System.out.println(strung(M));
 		svd = null;
 	}
 
