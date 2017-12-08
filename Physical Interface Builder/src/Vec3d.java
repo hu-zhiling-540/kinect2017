@@ -14,7 +14,7 @@ public class Vec3d {
 	private double z;
 	protected double[] arr = new double[3]; // array of vector's components
 
-//	private final int len = 3; // length of the vector
+	// private final int len = 3; // length of the vector
 
 	public static final Vec3d ZERO_V3 = new Vec3d(0, 0, 0);
 	public static final Vec3d ONE_V3 = new Vec3d(1, 1, 1);

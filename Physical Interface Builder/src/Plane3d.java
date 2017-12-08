@@ -86,7 +86,7 @@ public class Plane3d {
 	 * 
 	 * @param pt
 	 * @return
-	 */
+ */
 	public double signedPtDist(Point3d pt) {
 		return pt.subtract(planePt).dot(norm);
 	}

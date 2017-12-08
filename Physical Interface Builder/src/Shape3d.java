@@ -77,6 +77,7 @@ public class Shape3d {
 			else if (pt.getY() < yMin)
 				yMin = pt.getY();
 		}
+		System.out.println(pt.toString());
 		tempPts.add(pt);
 	}
 
@@ -94,10 +95,6 @@ public class Shape3d {
 
 	public void buildShape() {
 		validate();
-		// if (extrusion == 0) {
-		// planarPts = tempPts;
-		// return this;
-		// }
 		OrthogonalRegression3D or = new OrthogonalRegression3D(tempPts);
 		try {
 			Plane3d plane = or.fitPlane(1.0);
@@ -110,10 +107,49 @@ public class Shape3d {
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
+	}
 
-		// Shape3d sp = new Shape3d(plane, tempPts);
-		// // Shape3d sp = null;
-		// return sp;
+	public boolean contains(Point3d pt) {
+		if (is2dShape())
+			return contains2d(pt);
+		return contains3d(pt);
+	}
+
+	// untested!!
+	public boolean contains3d(Point3d pt) {
+		if (!contains2d(onPlane.ptProjOnPlane(pt)))
+			return false;
+		// !!! unsure about x/y/z
+		if (0 <= pt.getZ() && pt.getZ() <= extrusion)
+			return true;
+		return false;
+	}
+
+	/**
+	 * Returns true if this shape contains the point. Algorithm: Draw a horizontal
+	 * line to the right of each point and extend it to infinity Count the number of
+	 * times a line intersects the polygon. even number - point is outside; odd
+	 * number - point is inside
+	 * 
+	 * @param pt
+	 * @return
+	 */
+	public boolean contains2d(Point3d pt) {
+		if (offFixedBounds(pt))
+			return false;
+		LineSeg ray = createRay(pt);
+		int xings = 0;
+		for (int i = 1; i < planarPts.size(); i++) {
+			LineSeg edge = new LineSeg(planarPts.get(i - 1), planarPts.get(i));
+			if (edge.crossLine(ray))
+				xings += 1;
+		}
+		LineSeg edge = new LineSeg(planarPts.get(planarPts.size() - 1), planarPts.get(0));
+		if (edge.crossLine(ray))
+			xings += 1;
+		if (xings % 2 == 1)
+			return true;
+		return false;
 	}
 
 	/**
@@ -141,33 +177,6 @@ public class Shape3d {
 		double epsilon = (xMax - xMin) / 10e6;
 		Point3d extreme = new Point3d(xMax + epsilon, yMax);
 		return new LineSeg(pt, extreme);
-	}
-
-	/**
-	 * Returns true if this shape contains the point. Algorithm: Draw a horizontal
-	 * line to the right of each point and extend it to infinity Count the number of
-	 * times a line intersects the polygon. even number - point is outside; odd
-	 * number - point is inside
-	 * 
-	 * @param pt
-	 * @return
-	 */
-	public boolean contains(Point3d pt) {
-		if (offFixedBounds(pt))
-			return false;
-		LineSeg ray = createRay(pt);
-		int xings = 0;
-		for (int i = 1; i < planarPts.size(); i++) {
-			LineSeg edge = new LineSeg(planarPts.get(i - 1), planarPts.get(i));
-			if (edge.crossLine(ray))
-				xings += 1;
-		}
-		LineSeg edge = new LineSeg(planarPts.get(planarPts.size() - 1), planarPts.get(0));
-		if (edge.crossLine(ray))
-			xings += 1;
-		if (xings % 2 == 1)
-			return true;
-		return false;
 	}
 
 	/**

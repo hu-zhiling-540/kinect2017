@@ -17,26 +17,20 @@ public class ClosedHandDrawTest extends PApplet {
 
 	KinectBodyDataProvider kinectReader;
 	KinectBodyData bodyData;
+	public static float PROJECTOR_RATIO = 1080f / 1920.0f;
 
-	Long drawerID = null;
 	PersonTracker pTracker = new PersonTracker();
 	HashMap<Long, Person> people = new HashMap<Long, Person>();
+
+	// default drawing hand
+	Long drawerID = null;
+	String trakcingHand = Body.RIGHT_HAND_STATE;
+	Boolean isDrawing = false;
+	Long drawerId;
 
 	HashSet<Plane3d> planes = new HashSet<Plane3d>();
 	HashMap<Long, Shape3d> shapes = new HashMap<Long, Shape3d>();
 	Shape3d currShape;
-
-	// default drawing hand
-	String trakcingHand = Body.RIGHT_HAND_STATE;
-
-	ArrayList<Point3d> planeMarks = new ArrayList<Point3d>();
-
-	Boolean isDrawing = false;
-	Long drawerId;
-
-	Plane3d workingPlane;
-
-	public static float PROJECTOR_RATIO = 1080f / 1920.0f;
 
 	/**
 	 * Will be called on each frame
@@ -44,7 +38,6 @@ public class ClosedHandDrawTest extends PApplet {
 	public void draw() {
 		setScale(.5f);
 
-		// case BLUE:
 		background(173, 216, 230);
 
 		bodyData = kinectReader.getMostRecentData();
@@ -73,6 +66,7 @@ public class ClosedHandDrawTest extends PApplet {
 	public void drawing(Person p) {
 		Body bd = p.body;
 		long id = bd.getId(); // body id
+		
 		// if the person's drawing hand is open
 		if (bd.rightHandOpen) {
 			// no one else initiates the drawing mood
@@ -109,6 +103,7 @@ public class ClosedHandDrawTest extends PApplet {
 			}
 		}
 	}
+	
 
 	/**
 	 * Mergs drawerID and a random number to form the shapeID
@@ -121,7 +116,9 @@ public class ClosedHandDrawTest extends PApplet {
 		int x = ran.nextInt(10); // give a number 1 - 9
 		Long lx = new Long(x);
 		String l3 = Long.toString(lx) + Long.toString(drawerID);
-		return Long.valueOf(l3).longValue(); // converting String to long
+		Long id = Long.valueOf(l3).longValue(); // converting String to long
+		System.out.println(id.toString());
+		return id;
 	}
 
 	public void openHand(PVector h) {
@@ -212,12 +209,12 @@ public class ClosedHandDrawTest extends PApplet {
 	}
 
 	public void setup() {
-		// try {
-		// kinectReader = new KinectBodyDataProvider("openDrawShape.kinect", 1);
-		// } catch (IOException e) {
-		// System.out.println("Unable to creat e kinect producer");
-		// }
-		kinectReader = new KinectBodyDataProvider(8008);
+		try {
+			kinectReader = new KinectBodyDataProvider("verticalwClosed.kinect", 1);
+		} catch (IOException e) {
+			System.out.println("Unable to creat e kinect producer");
+		}
+		// kinectReader = new KinectBodyDataProvider(8008);
 		kinectReader.start();
 	}
 
