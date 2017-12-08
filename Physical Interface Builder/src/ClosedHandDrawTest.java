@@ -92,8 +92,9 @@ public class ClosedHandDrawTest extends PApplet {
 			if (drawerID != null && drawerID == id && !currShape.isClosed) {
 				isDrawing = false; // resumes drawing state
 				try {
-					currShape.buildShape();
-					shapes.put(createShapeId(id), currShape);
+					Long sid = createShapeId(id);
+					currShape.buildShape(sid);
+					shapes.put(sid, currShape);
 					System.out.println("# shapes" + shapes.size());
 				} catch (IllegalArgumentException e) {
 					// e.printStackTrace();
