@@ -31,6 +31,7 @@ public class ClosedHandDrawTest extends PApplet {
 	HashSet<Plane3d> planes = new HashSet<Plane3d>();
 	HashMap<Long, Shape3d> shapes = new HashMap<Long, Shape3d>();
 	Shape3d currShape;
+	static Long sid;
 
 	/**
 	 * Will be called on each frame
@@ -66,7 +67,7 @@ public class ClosedHandDrawTest extends PApplet {
 	public void drawing(Person p) {
 		Body bd = p.body;
 		long id = bd.getId(); // body id
-		
+
 		// if the person's drawing hand is open
 		if (bd.rightHandOpen) {
 			// no one else initiates the drawing mood
@@ -92,8 +93,9 @@ public class ClosedHandDrawTest extends PApplet {
 			if (drawerID != null && drawerID == id && !currShape.isClosed) {
 				isDrawing = false; // resumes drawing state
 				try {
-					Long sid = createShapeId(id);
+					sid = createShapeId(id);
 					currShape.buildShape(sid);
+					System.out.println(currShape.toString());
 					shapes.put(sid, currShape);
 					System.out.println("# shapes" + shapes.size());
 				} catch (IllegalArgumentException e) {
@@ -104,7 +106,6 @@ public class ClosedHandDrawTest extends PApplet {
 			}
 		}
 	}
-	
 
 	/**
 	 * Mergs drawerID and a random number to form the shapeID
@@ -207,6 +208,13 @@ public class ClosedHandDrawTest extends PApplet {
 
 	public static void main(String[] args) {
 		PApplet.main(ClosedHandDrawTest.class.getName());
+		try {
+			Shape3d temp = ShapeData.loadShape(String.valueOf(sid));
+			System.out.println(temp.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void setup() {

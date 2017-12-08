@@ -13,7 +13,7 @@ import processing.core.PVector;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
 
-public class ShapeData extends PApplet {
+public class ShapeData {
 
 	public JSONObject serializePVec(PVector pv) {
 		JSONObject obj = new JSONObject();
@@ -48,7 +48,31 @@ public class ShapeData extends PApplet {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
 
+	@SuppressWarnings("unchecked")
+	public static Shape3d loadShape(String fileName) throws IOException {
+		FileInputStream fis = new FileInputStream(fileName);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		Shape3d sp = new Shape3d();
+		while (fis.available() > 0) {
+			try {
+				if (sp.planarPts == null) {
+					Object rper = ois.readObject();
+					sp.planarPts = (ArrayList<Point3d>) rper;
+				} else if (sp.is2dShape()) {
+					Object rper = ois.readObject();
+					if ((Integer) rper == 0)
+						break;
+					sp.setExtr((Integer) rper);
+				}
+
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+		ois.close();
+		return sp;
 	}
 
 	// public void loadShape(String fileName) {
@@ -65,21 +89,21 @@ public class ShapeData extends PApplet {
 	// }
 	// }
 
-	public Shape3d loadSavedShape(String fileName) {
-		JSONObject json = loadJSONObject(fileName);
-		JSONObject plane = json.getJSONObject("plane");
-		JSONArray vertices = json.getJSONArray("vertices");
-
-		int size = vertices.size();
-
-		Shape3d sp = new Shape3d();
-		ArrayList<Vec3d> pts = new ArrayList<Vec3d>();
-		for (int i = 0; i < size; i++) {
-			JSONObject obj = vertices.getJSONObject(i);
-			pts.add(deserializePVec(obj));
-		}
-		return sp;
-	}
+	// public Shape3d loadSavedShape(String fileName) {
+	// JSONObject json = loadJSONObject(fileName);
+	// JSONObject plane = json.getJSONObject("plane");
+	// JSONArray vertices = json.getJSONArray("vertices");
+	//
+	// int size = vertices.size();
+	//
+	// Shape3d sp = new Shape3d();
+	// ArrayList<Vec3d> pts = new ArrayList<Vec3d>();
+	// for (int i = 0; i < size; i++) {
+	// JSONObject obj = vertices.getJSONObject(i);
+	// pts.add(deserializePVec(obj));
+	// }
+	// return sp;
+	// }
 
 	public void saveShape(String fileName, Plane3d onPlane, ArrayList<Shape3d> shapes) {
 		// JSONObject json = new JSONObject();

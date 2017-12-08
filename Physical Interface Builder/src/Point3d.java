@@ -1,5 +1,6 @@
+import java.io.Serializable;
 
-public class Point3d extends Vec3d {
+public class Point3d extends Vec3d implements Serializable {
 
 	private double x;
 	private double y;
