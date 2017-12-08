@@ -93,8 +93,9 @@ public class Shape3d {
 		isClosed = true;
 	}
 
-	public void buildShape() {
+	public void buildShape(Long sid) {
 		validate();
+		this.shapeID = sid;
 		OrthogonalRegression3D or = new OrthogonalRegression3D(tempPts);
 		try {
 			Plane3d plane = or.fitPlane(1.0);
@@ -104,6 +105,7 @@ public class Shape3d {
 				planarPts.add(plane.ptProjOnPlane(tempPts.get(i)));
 			}
 			this.extrusion = 0;
+			ShapeData.saveShape(String.valueOf(this.shapeID), this);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
