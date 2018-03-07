@@ -60,11 +60,15 @@ public class ClosedHandDrawTest extends PApplet {
 		for (Body b : pTracker.getPeople().values()) {
 			Person p = people.get(b.getId());
 			p.update(b);
-			drawing(p);
+			drawing2(p);
 		}
 	}
-
-	public void drawing(Person p) {
+	
+	// before drawing, call select method to check if any shape is in the range
+	// if not, drawing
+	// add drawing points within seconds??
+	// suspend hand??
+	public void drawing2(Person p) {
 		Body bd = p.body;
 		long id = bd.getId(); // body id
 
@@ -107,6 +111,50 @@ public class ClosedHandDrawTest extends PApplet {
 		}
 	}
 
+//	public void drawing(Person p) {
+//		Body bd = p.body;
+//		long id = bd.getId(); // body id
+//
+//		// if the person's drawing hand is open
+//		if (bd.rightHandOpen) {
+//			// no one else initiates the drawing mood
+//			if (drawerID == null || isDrawing == false) {
+//				drawerID = new Long(id);
+//				isDrawing = true;
+//				currShape = new Shape3d();
+//			}
+//			// same drawer
+//			else if (drawerID == id) {
+//				// currently working on a shape
+//				if (isDrawing == true) {
+//					PVector rt = bd.getJoint(Body.HAND_RIGHT);
+//
+//					if (rt != null) {
+//						currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
+//						openHand(rt);
+//					}
+//				}
+//			} else if (drawerID != id)
+//				return;
+//		} else {
+//			if (drawerID != null && drawerID == id && !currShape.isClosed) {
+//				isDrawing = false; // resumes drawing state
+//				try {
+//					sid = createShapeId(id);
+//					currShape.buildShape(sid);
+//					System.out.println(currShape.toString());
+//					shapes.put(sid, currShape);
+//					System.out.println("# shapes" + shapes.size());
+//				} catch (IllegalArgumentException e) {
+//					// e.printStackTrace();
+//					System.out.println("invalid building shape");
+//					System.out.println("# shapes" + shapes.size());
+//				}
+//			}
+//		}
+//	}
+	
+	
 	/**
 	 * Mergs drawerID and a random number to form the shapeID
 	 * 
@@ -134,6 +182,27 @@ public class ClosedHandDrawTest extends PApplet {
 		if (vec != null) {
 			ellipse(vec.x, vec.y, .1f, .1f);
 		}
+	}
+	
+	/**
+	 * NEW METHOD
+	 * called on if drawing mood on
+	 * @param pt
+	 */
+	// loop through existing shape files
+	// set current drawing shape if selected
+	public void select(Point3d pt) {
+		// no shapes around
+		if(shapes.isEmpty())
+			return;
+		for (Shape3d sp : shapes.values()) {
+//			shapes.get(sp.getId());
+			if(sp.contains(pt)) {
+				currShape = sp;	// on current shape
+				return;
+			}
+		}
+			
 	}
 
 	// public void stopDrawing() {
@@ -209,10 +278,10 @@ public class ClosedHandDrawTest extends PApplet {
 	public static void main(String[] args) {
 		PApplet.main(ClosedHandDrawTest.class.getName());
 		try {
+			// load shape for given name passed in the argument: sid = ...
 			Shape3d temp = ShapeData.loadShape(String.valueOf(sid));
-			System.out.println(temp.toString());
+//			System.out.println(temp.toString());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

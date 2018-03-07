@@ -90,7 +90,7 @@ public class PersonTracker {
 			System.out.println("enter:" + l);
 		}
 		for (Long l : exits) {
-			System.out.println(" exit:" + l);
+			System.out.println("exit:" + l);
 		}
 	}
 

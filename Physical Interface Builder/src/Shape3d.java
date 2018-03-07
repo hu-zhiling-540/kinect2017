@@ -35,7 +35,7 @@ public class Shape3d {
 		tempPts = new ArrayList<Point3d>();
 		planarPts = new ArrayList<Point3d>();
 		isClosed = false;
-		extrusion = 0;
+		extrusion = 0.01;
 
 		System.out.println("just created a shape");
 	}
@@ -45,7 +45,7 @@ public class Shape3d {
 		for (int i = 0; i < points.size(); i++) {
 			planarPts.add(plane.ptProjOnPlane(points.get(i)));
 		}
-		this.extrusion = 0;
+		this.extrusion = 0.01;
 	}
 
 	public Shape3d(Plane3d plane, ArrayList<Point3d> points, double extrusion) {
@@ -110,7 +110,10 @@ public class Shape3d {
 			e.printStackTrace();
 		}
 	}
-
+	
+	public long getId() {
+		return this.shapeID;
+	}
 	public boolean contains(Point3d pt) {
 		if (is2dShape())
 			return contains2d(pt);

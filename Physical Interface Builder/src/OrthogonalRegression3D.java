@@ -1,6 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
 
