@@ -99,7 +99,7 @@ public class ClosedHandDrawTest extends PApplet {
 			// no one else initiates the drawing mood
 			if (drawerID == null) {
 				if (!isDrawing) {
-					if (!isSelecting || traces.size() == 0) { // either idle or no current tracking traces
+					if (!isSelecting && traces.size() == 0) { // either idle or no current tracking traces
 						traces.add(new Point3d(rt.x, rt.y, rt.z));
 						isSelecting = true;
 					} else {
@@ -113,7 +113,6 @@ public class ClosedHandDrawTest extends PApplet {
 								currShape = new Shape3d(); // start a new shape
 								traces = new ArrayList<Point3d>();
 							}
-
 						}
 					}
 				} else {
@@ -134,7 +133,17 @@ public class ClosedHandDrawTest extends PApplet {
 						isSelecting = false;
 					}
 				} else { // no selection
-					if (isDrawing == true) {
+					if (!isDrawing) {
+						isDrawing = true;
+						// create a new shape
+						drawerID = new Long(id);
+						currShape = new Shape3d(); // start a new shape
+						traces = new ArrayList<Point3d>();
+						if (rt != null) {
+							currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
+							openHand(rt); // draw out for checking
+						}
+					} else {
 						if (rt != null) {
 							if (traces.size() >= 50)
 								traces.remove(0);
@@ -147,28 +156,29 @@ public class ClosedHandDrawTest extends PApplet {
 			} else if (drawerID != id)
 				return;
 			else {
-				if (isDrawing) {
+				if (isDrawing && drawerID != null) { // lose track of drawing person
 					if (traces.size() > 0) {
 						traces.remove(0);
 					} else if (traces.size() == 0) {
 						isDrawing = false; // resumes drawing state
 						drawerID = null;
-					}
-					try {
-						sid = createShapeId(id);
-						currShape.buildShape(sid);
-						System.out.println(currShape.toString());
-						shapes.put(sid, currShape);
-						System.out.println("# shapes" + shapes.size());
-					} catch (IllegalArgumentException e) {
-						// e.printStackTrace();
-						System.out.println("invalid building shape");
-						System.out.println("# shapes" + shapes.size());
+						// start building the current shape
+						try {
+							sid = createShapeId(id);
+							currShape.buildShape(sid);
+							System.out.println(currShape.toString());
+							shapes.put(sid, currShape);
+							System.out.println("# shapes" + shapes.size());
+						} catch (IllegalArgumentException e) {
+							// e.printStackTrace();
+							System.out.println("invalid building shape");
+							System.out.println("# shapes" + shapes.size());
+						}
 					}
 				}
-
 			}
 		}
+
 	}
 
 	/**
