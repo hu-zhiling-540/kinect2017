@@ -26,12 +26,15 @@ public class ClosedHandDrawTest extends PApplet {
 	Long drawerID = null;
 	String trakcingHand = Body.RIGHT_HAND_STATE;
 	Boolean isDrawing = false;
+	Boolean isSelecting = false;
 	Long drawerId;
 
 	HashSet<Plane3d> planes = new HashSet<Plane3d>();
 	HashMap<Long, Shape3d> shapes = new HashMap<Long, Shape3d>();
 	Shape3d currShape;
 	static Long sid;
+
+	ArrayList<Point3d> traces = new ArrayList<Point3d>();
 
 	/**
 	 * Will be called on each frame
@@ -63,7 +66,25 @@ public class ClosedHandDrawTest extends PApplet {
 			drawing2(p);
 		}
 	}
-	
+
+	public Point3d hoverOver() {
+		if (traces == null || traces.isEmpty())
+			return null;
+
+		double xSum = 0;
+		double ySum = 0;
+		double zSum = 0;
+
+		for (Point3d pt : traces) {
+			xSum += pt.getX();
+			ySum += pt.getY();
+			zSum += pt.getZ();
+		}
+
+		return new Point3d(xSum / traces.size(), ySum / traces.size(), zSum / traces.size());
+
+	}
+
 	// before drawing, call select method to check if any shape is in the range
 	// if not, drawing
 	// add drawing points within seconds??
@@ -74,87 +95,82 @@ public class ClosedHandDrawTest extends PApplet {
 
 		// if the person's drawing hand is open
 		if (bd.rightHandOpen) {
+			PVector rt = bd.getJoint(Body.HAND_RIGHT);
 			// no one else initiates the drawing mood
-			if (drawerID == null || isDrawing == false) {
-				drawerID = new Long(id);
-				isDrawing = true;
-				currShape = new Shape3d();
-			}
-			// same drawer
-			else if (drawerID == id) {
-				// currently working on a shape
-				if (isDrawing == true) {
-					PVector rt = bd.getJoint(Body.HAND_RIGHT);
+			if (drawerID == null) {
+				if (!isDrawing) {
+					if (!isSelecting || traces.size() == 0) { // either idle or no current tracking traces
+						traces.add(new Point3d(rt.x, rt.y, rt.z));
+						isSelecting = true;
+					} else {
+						if (traces.size() >= 50) {
+							// average traces
+							isSelecting = select(hoverOver()); // update current shape if is selecting
+							if (isSelecting) {
+								traces = new ArrayList<Point3d>();
+							} else { // create a new shape
+								drawerID = new Long(id);
+								currShape = new Shape3d(); // start a new shape
+								traces = new ArrayList<Point3d>();
+							}
 
-					if (rt != null) {
-						currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
-						openHand(rt);
+						}
+					}
+				} else {
+					// traces update might lose the drawer ID
+					// detect right hand open, but isDrawing is still on
+				}
+			} else if (drawerID == id) { // same drawer
+				if (isSelecting) {
+					if (currShape != null) { // a shape is selected as particular
+						if (traces.size() >= 50)
+							traces.remove(0);
+						traces.add(new Point3d(rt.x, rt.y, rt.z));
+						// should be discussed later
+						double newExtru = currShape.onPlane.signedPtDist(hoverOver());
+						if (!currShape.isClosed) // will be discussed later; on definition of closed shape
+							currShape.extrusion = newExtru;
+					} else { // should not go into this case
+						isSelecting = false;
+					}
+				} else { // no selection
+					if (isDrawing == true) {
+						if (rt != null) {
+							if (traces.size() >= 50)
+								traces.remove(0);
+							traces.add(new Point3d(rt.x, rt.y, rt.z));
+							currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
+							openHand(rt); // draw out for checking
+						}
 					}
 				}
 			} else if (drawerID != id)
 				return;
-		} else {
-			if (drawerID != null && drawerID == id && !currShape.isClosed) {
-				isDrawing = false; // resumes drawing state
-				try {
-					sid = createShapeId(id);
-					currShape.buildShape(sid);
-					System.out.println(currShape.toString());
-					shapes.put(sid, currShape);
-					System.out.println("# shapes" + shapes.size());
-				} catch (IllegalArgumentException e) {
-					// e.printStackTrace();
-					System.out.println("invalid building shape");
-					System.out.println("# shapes" + shapes.size());
+			else {
+				if (isDrawing) {
+					if (traces.size() > 0) {
+						traces.remove(0);
+					} else if (traces.size() == 0) {
+						isDrawing = false; // resumes drawing state
+						drawerID = null;
+					}
+					try {
+						sid = createShapeId(id);
+						currShape.buildShape(sid);
+						System.out.println(currShape.toString());
+						shapes.put(sid, currShape);
+						System.out.println("# shapes" + shapes.size());
+					} catch (IllegalArgumentException e) {
+						// e.printStackTrace();
+						System.out.println("invalid building shape");
+						System.out.println("# shapes" + shapes.size());
+					}
 				}
+
 			}
 		}
 	}
 
-//	public void drawing(Person p) {
-//		Body bd = p.body;
-//		long id = bd.getId(); // body id
-//
-//		// if the person's drawing hand is open
-//		if (bd.rightHandOpen) {
-//			// no one else initiates the drawing mood
-//			if (drawerID == null || isDrawing == false) {
-//				drawerID = new Long(id);
-//				isDrawing = true;
-//				currShape = new Shape3d();
-//			}
-//			// same drawer
-//			else if (drawerID == id) {
-//				// currently working on a shape
-//				if (isDrawing == true) {
-//					PVector rt = bd.getJoint(Body.HAND_RIGHT);
-//
-//					if (rt != null) {
-//						currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
-//						openHand(rt);
-//					}
-//				}
-//			} else if (drawerID != id)
-//				return;
-//		} else {
-//			if (drawerID != null && drawerID == id && !currShape.isClosed) {
-//				isDrawing = false; // resumes drawing state
-//				try {
-//					sid = createShapeId(id);
-//					currShape.buildShape(sid);
-//					System.out.println(currShape.toString());
-//					shapes.put(sid, currShape);
-//					System.out.println("# shapes" + shapes.size());
-//				} catch (IllegalArgumentException e) {
-//					// e.printStackTrace();
-//					System.out.println("invalid building shape");
-//					System.out.println("# shapes" + shapes.size());
-//				}
-//			}
-//		}
-//	}
-	
-	
 	/**
 	 * Mergs drawerID and a random number to form the shapeID
 	 * 
@@ -183,26 +199,27 @@ public class ClosedHandDrawTest extends PApplet {
 			ellipse(vec.x, vec.y, .1f, .1f);
 		}
 	}
-	
+
 	/**
-	 * NEW METHOD
-	 * called on if drawing mood on
+	 * NEW METHOD called on if drawing mood on
+	 * 
 	 * @param pt
 	 */
 	// loop through existing shape files
 	// set current drawing shape if selected
-	public void select(Point3d pt) {
+	public boolean select(Point3d pt) {
 		// no shapes around
-		if(shapes.isEmpty())
-			return;
+		if (shapes.isEmpty())
+			return false;
 		for (Shape3d sp : shapes.values()) {
-//			shapes.get(sp.getId());
-			if(sp.contains(pt)) {
-				currShape = sp;	// on current shape
-				return;
+			// shapes.get(sp.getId());
+			if (sp.contains(pt)) {
+				currShape = sp; // update current shape
+				return true;
 			}
 		}
-			
+		return false;
+
 	}
 
 	// public void stopDrawing() {
@@ -280,7 +297,7 @@ public class ClosedHandDrawTest extends PApplet {
 		try {
 			// load shape for given name passed in the argument: sid = ...
 			Shape3d temp = ShapeData.loadShape(String.valueOf(sid));
-//			System.out.println(temp.toString());
+			// System.out.println(temp.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
