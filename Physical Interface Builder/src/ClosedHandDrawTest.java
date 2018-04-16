@@ -2,13 +2,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 
-import com.sun.istack.internal.Nullable;
-
 import processing.core.PApplet;
-import processing.core.PShape;
 import processing.core.PVector;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
@@ -64,6 +60,7 @@ public class ClosedHandDrawTest extends PApplet {
 			Person p = people.get(b.getId());
 			p.update(b);
 			drawing2(p);
+			openHand(p.body.getJoint(Body.HAND_RIGHT));
 		}
 	}
 
@@ -95,20 +92,25 @@ public class ClosedHandDrawTest extends PApplet {
 
 		// if the person's drawing hand is open
 		if (bd.rightHandOpen) {
+			// System.out.println("right hand open");
 			PVector rt = bd.getJoint(Body.HAND_RIGHT);
 			// no one else initiates the drawing mood
 			if (drawerID == null) {
+				// System.out.println("drawer id null");
 				if (!isDrawing) {
-					if (!isSelecting && traces.size() == 0) { // either idle or no current tracking traces
+					// System.out.println("not drawing");
+					if (!isSelecting && traces.size() < 10) { // either idle or no current tracking traces
 						traces.add(new Point3d(rt.x, rt.y, rt.z));
-						isSelecting = true;
+						// System.out.println("add traces");
+						// isSelecting = true;
 					} else {
-						if (traces.size() >= 50) {
+						if (traces.size() >= 10) {
 							// average traces
 							isSelecting = select(hoverOver()); // update current shape if is selecting
 							if (isSelecting) {
 								traces = new ArrayList<Point3d>();
 							} else { // create a new shape
+								System.out.println("created a new shape");
 								drawerID = new Long(id);
 								currShape = new Shape3d(); // start a new shape
 								traces = new ArrayList<Point3d>();
@@ -122,7 +124,7 @@ public class ClosedHandDrawTest extends PApplet {
 			} else if (drawerID == id) { // same drawer
 				if (isSelecting) {
 					if (currShape != null) { // a shape is selected as particular
-						if (traces.size() >= 50)
+						if (traces.size() >= 10)
 							traces.remove(0);
 						traces.add(new Point3d(rt.x, rt.y, rt.z));
 						// should be discussed later
@@ -143,43 +145,42 @@ public class ClosedHandDrawTest extends PApplet {
 							currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
 							openHand(rt); // draw out for checking
 						}
-					} else {
+					} else { // still drawing
 						if (rt != null) {
-							if (traces.size() >= 50)
+							if (traces.size() >= 20)
 								traces.remove(0);
 							traces.add(new Point3d(rt.x, rt.y, rt.z));
-							currShape.addVertex(new Point3d(rt.x, rt.y, rt.z));
+							currShape.addVertex(hoverOver());
 							openHand(rt); // draw out for checking
 						}
 					}
 				}
 			} else if (drawerID != id)
 				return;
-			else {
-				if (isDrawing && drawerID != null) { // lose track of drawing person
-					if (traces.size() > 0) {
-						traces.remove(0);
-					} else if (traces.size() == 0) {
-						isDrawing = false; // resumes drawing state
-						drawerID = null;
-						// start building the current shape
-						try {
-							sid = createShapeId(id);
-							currShape.buildShape(sid);
-							System.out.println(currShape.toString());
-							shapes.put(sid, currShape);
-							System.out.println("# shapes" + shapes.size());
-						} catch (IllegalArgumentException e) {
-							// e.printStackTrace();
-							System.out.println("invalid building shape");
-							System.out.println("# shapes" + shapes.size());
-						}
+		} else {
+			if (isDrawing && drawerID != null) { // lose track of drawing person
+				if (traces.size() > 0) {
+					traces.remove(0);
+				} else if (traces.size() == 0) {
+					isDrawing = false; // resumes drawing state
+					drawerID = null;
+					// start building the current shape
+					try {
+						sid = createShapeId(id);
+						currShape.buildShape(sid);
+						System.out.println(currShape.toString());
+						shapes.put(sid, currShape);
+						System.out.println("# shapes" + shapes.size());
+					} catch (IllegalArgumentException e) {
+						// e.printStackTrace();
+						System.out.println("invalid building shape");
+						System.out.println("# shapes" + shapes.size());
 					}
 				}
 			}
 		}
-
 	}
+
 
 	/**
 	 * Mergs drawerID and a random number to form the shapeID
@@ -229,7 +230,6 @@ public class ClosedHandDrawTest extends PApplet {
 			}
 		}
 		return false;
-
 	}
 
 	// public void stopDrawing() {
@@ -304,13 +304,13 @@ public class ClosedHandDrawTest extends PApplet {
 
 	public static void main(String[] args) {
 		PApplet.main(ClosedHandDrawTest.class.getName());
-		try {
-			// load shape for given name passed in the argument: sid = ...
-			Shape3d temp = ShapeData.loadShape(String.valueOf(sid));
-			// System.out.println(temp.toString());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		// try {
+		// // load shape for given name passed in the argument: sid = ...
+		// Shape3d temp = ShapeData.loadShape(String.valueOf(sid));
+		// // System.out.println(temp.toString());
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
 	}
 
 	public void setup() {
