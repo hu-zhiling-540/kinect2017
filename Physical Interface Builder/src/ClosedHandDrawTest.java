@@ -20,7 +20,8 @@ public class ClosedHandDrawTest extends PApplet {
 
 	// default drawing hand
 	Long drawerID = null;
-	String trakcingHand = Body.RIGHT_HAND_STATE;
+	Boolean handDetected = false;
+	String trackingHand = null; // Body.LEFT_HAND_STATE; Body.RIGHT_HAND_STATE;
 	Boolean isDrawing = false;
 	Boolean isSelecting = false;
 	Long drawerId;
@@ -80,6 +81,26 @@ public class ClosedHandDrawTest extends PApplet {
 
 		return new Point3d(xSum / traces.size(), ySum / traces.size(), zSum / traces.size());
 
+	}
+
+	public void drawingHand(Body bd) {
+		if (bd.rightHandOpen) {
+			if (!bd.leftHandOpen) { // only right hand opens
+				if (!handDetected) // no hand is being tracked rn
+					trackingHand = Body.HAND_RIGHT;
+				else
+					return; // does nothing
+			} else // both hands are closed
+				handDetected = false;
+		} else { // right hand closed
+			if (bd.leftHandOpen) { // only left hand opens
+				if (!handDetected) // no hand is being tracked rn
+					trackingHand = Body.HAND_LEFT;
+				else
+					return; // does nothing
+			} else // both hands open
+				handDetected = false;
+		}
 	}
 
 	// before drawing, call select method to check if any shape is in the range
@@ -170,7 +191,7 @@ public class ClosedHandDrawTest extends PApplet {
 						currShape.buildShape(sid);
 						System.out.println(currShape.toString());
 						shapes.put(sid, currShape);
-						System.out.println("# shapes" + shapes.size());
+						System.out.println("shapes size: " + shapes.size());
 					} catch (IllegalArgumentException e) {
 						// e.printStackTrace();
 						System.out.println("invalid building shape");
@@ -180,7 +201,6 @@ public class ClosedHandDrawTest extends PApplet {
 			}
 		}
 	}
-
 
 	/**
 	 * Mergs drawerID and a random number to form the shapeID
