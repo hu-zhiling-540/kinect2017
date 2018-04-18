@@ -22,6 +22,7 @@ public class ClosedHandDrawTest extends PApplet {
 	Long drawerID = null;
 	Boolean handDetected = false;
 	String trackingHand = null; // Body.LEFT_HAND_STATE; Body.RIGHT_HAND_STATE;
+
 	Boolean isDrawing = false;
 	Boolean isSelecting = false;
 	Long drawerId;
@@ -83,20 +84,27 @@ public class ClosedHandDrawTest extends PApplet {
 
 	}
 
+	// bug: kinect seems to detect both hands open all the time
 	public void drawingHand(Body bd) {
 		if (bd.rightHandOpen) {
-			if (!bd.leftHandOpen) { // only right hand opens
-				if (!handDetected) // no hand is being tracked rn
+//			if (!bd.leftHandOpen) { // only right hand opens
+				if (!handDetected) {// no hand is being tracked rn
 					trackingHand = Body.HAND_RIGHT;
-				else
-					return; // does nothing
-			} else // both hands are closed
-				handDetected = false;
+					handDetected = true;
+				} else {
+					if (trackingHand != Body.HAND_RIGHT)
+						handDetected = false;
+//				}
+//
+//			} else { // both hands are open
+//				handDetected = false;
+			}
 		} else { // right hand closed
 			if (bd.leftHandOpen) { // only left hand opens
-				if (!handDetected) // no hand is being tracked rn
+				if (!handDetected) {// no hand is being tracked rn
 					trackingHand = Body.HAND_LEFT;
-				else
+					handDetected = true;
+				} else
 					return; // does nothing
 			} else // both hands open
 				handDetected = false;
@@ -110,11 +118,11 @@ public class ClosedHandDrawTest extends PApplet {
 	public void drawing2(Person p) {
 		Body bd = p.body;
 		long id = bd.getId(); // body id
+		drawingHand(bd);
 
 		// if the person's drawing hand is open
-		if (bd.rightHandOpen) {
-			// System.out.println("right hand open");
-			PVector rt = bd.getJoint(Body.HAND_RIGHT);
+		if (handDetected) {
+			PVector rt = bd.getJoint(trackingHand);
 			// no one else initiates the drawing mood
 			if (drawerID == null) {
 				// System.out.println("drawer id null");
